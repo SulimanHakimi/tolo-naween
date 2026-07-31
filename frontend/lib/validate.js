@@ -25,10 +25,3 @@ export function validateDiscount({ name, kind, value, scope, target, from, to })
   if (from && to && new Date(from) > new Date(to)) return 'تاریخ شروع بعد از تاریخ پایان است';
   return null;
 }
-
-export function validateEmployee({ name, role, salary }) {
-  if (!name?.trim()) return 'نام کارمند لازم است';
-  if (!role?.trim()) return 'وظیفهٔ کارمند لازم است';
-  if (+salary < 0) return 'معاش منفی نمی‌شود';
-  return null;
-}

@@ -8,7 +8,7 @@ import Icon, { ICON } from './icons';
 
 const NAV_ICON = {
   dash: ICON.grid, pos: ICON.pos, inv: ICON.box, pur: ICON.truck, cust: ICON.users,
-  rep: ICON.chart, price: ICON.tag, emp: ICON.badge, sec: ICON.shield
+  rep: ICON.chart, price: ICON.tag, sec: ICON.shield
 };
 
 /**

@@ -94,8 +94,7 @@ export default function ReportModal({ type, period, onClose }) {
                   <div style={{ borderTop: '1px dashed #C6D0D8', margin: '8px 0' }}></div>
                   {row('تخفیفات داده‌شده', '− ' + fmt(data.discounts))}
                   {row('ضرر برگشتی‌ها', '− ' + fmt(data.returnLoss))}
-                  {row('معاشات', '− ' + fmt(data.salaries))}
-                  {row('مصارف دیگر', '− ' + fmt(data.otherExpenses))}
+                  {row('مصارف', '− ' + fmt(data.otherExpenses))}
                   <div className="doc-total" style={{ color: data.netProfit >= 0 ? 'var(--green)' : 'var(--red)' }}>
                     <div>مفاد خالص</div><div className="tnum">{fmt(data.netProfit)}</div>
                   </div>

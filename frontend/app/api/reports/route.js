@@ -22,11 +22,10 @@ export const GET = route(async (request) => {
 
   // Stock purchases already sit inside cost of goods sold, and returns are handled
   // through returnTotals — counting either here would double them.
-  const salaries = expenses.filter((e) => e.tag === 'salary').reduce((t, e) => t + e.amount, 0);
-  const other = expenses.filter((e) => !['stock', 'salary', 'return'].includes(e.tag)).reduce((t, e) => t + e.amount, 0);
+  const other = expenses.filter((e) => !['stock', 'return'].includes(e.tag)).reduce((t, e) => t + e.amount, 0);
 
   const discounts = pd.sales.reduce((t, s) => t + (s.autoDisc || 0) + (s.disc || 0), 0);
-  const netProfit = pd.cur.profit - pd.returns.profitLoss - salaries - other;
+  const netProfit = pd.cur.profit - pd.returns.profitLoss - other;
 
   const pct = (now, before) => (before ? Math.round((now - before) / before * 100) : null);
 
@@ -39,7 +38,7 @@ export const GET = route(async (request) => {
     netProfit, netProfitDelta: pct(netProfit, pd.prev.profit - pd.prevReturns.profitLoss),
     margin: pd.cur.rev ? Math.round(netProfit / pd.cur.rev * 100) : 0,
     cogs: pd.cur.rev - pd.cur.profit,
-    discounts, salaries, otherExpenses: other,
+    discounts, otherExpenses: other,
     returns: pd.returns.refunded, returnUnits: pd.returns.units,
     returnCount: pd.returns.count, returnLoss: pd.returns.profitLoss,
     avg: pd.cur.bills ? pd.cur.rev / pd.cur.bills : 0,

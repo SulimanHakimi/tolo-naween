@@ -117,17 +117,6 @@ const purchaseSchema = new mongoose.Schema({
   createdBy: String
 }, { timestamps: true });
 
-const employeeSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  role: { type: String, required: true },            // job title, free text
-  phone: String,
-  account: { type: String, default: '' },            // optional User.username
-  salary: { type: Number, default: 0 },              // monthly, in the shop currency
-  status: { type: String, enum: ['فعال', 'رخصت', 'خارج شده'], default: 'فعال' },
-  hired: Date,
-  lastPaid: Date
-}, { timestamps: true });
-
 const discountSchema = new mongoose.Schema({
   name: { type: String, required: true },
   kind: { type: String, enum: ['percent', 'amount'], default: 'percent' },
@@ -184,7 +173,6 @@ export const Customer = model('Customer', customerSchema);
 export const Sale = model('Sale', saleSchema);
 export const Return = model('Return', returnSchema);
 export const Purchase = model('Purchase', purchaseSchema);
-export const Employee = model('Employee', employeeSchema);
 export const Discount = model('Discount', discountSchema);
 export const Transaction = model('Transaction', transactionSchema);
 export const ActivityLog = model('ActivityLog', activityLogSchema);
@@ -192,7 +180,7 @@ export const Counter = model('Counter', counterSchema);
 export const Setting = model('Setting', settingSchema);
 
 export const COLLECTIONS = ['User', 'Product', 'Supplier', 'Customer', 'Sale', 'Return',
-  'Purchase', 'Employee', 'Discount', 'Transaction', 'ActivityLog', 'Counter', 'Setting'];
+  'Purchase', 'Discount', 'Transaction', 'ActivityLog', 'Counter', 'Setting'];
 
 export async function nextSeq(key) {
   const doc = await Counter.findOneAndUpdate({ key }, { $inc: { seq: 1 } }, { new: true, upsert: true });

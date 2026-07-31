@@ -10,12 +10,6 @@ export const C = {
   blueSoft: '#EDF4F8', greenSoft: '#E8F8EE', amberSoft: '#FBEAD3', redSoft: '#FCE8EC'
 };
 
-// Product-tile tints, cycled by index in the POS grid.
-export const TINTS = [
-  [C.blueSoft, C.brand], [C.greenSoft, C.green],
-  [C.amberSoft, C.amber], [C.redSoft, C.red]
-];
-
 // Two Dari letters make a readable tile badge; one is used when the name is short.
 export function abbr(name) {
   const clean = String(name || '').trim();

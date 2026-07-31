@@ -19,7 +19,6 @@ const LOG_STYLE = [
   [/بک‌اپ/, ICON.db, C.blueSoft, C.brand],
   [/رمز|حساب|دسترسی/, ICON.key, C.amberSoft, C.amber],
   [/قیمت|تخفیف|جنس/, ICON.edit, C.amberSoft, C.amber],
-  [/معاش|کارمند/, ICON.badge, C.greenSoft, C.green],
   [/قرض/, ICON.wallet, C.amberSoft, C.amber]
 ];
 const styleFor = (action) => {

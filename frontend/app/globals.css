@@ -160,14 +160,19 @@ input.ltr, .ltr { direction: ltr; text-align: left; }
 
 /* The hamburger and the drawer's own close button exist only on small screens; the
    desktop sidebar is always visible and needs neither. */
-.hamburger, .sidebar-close, .scrim { display: none; }
+.hamburger, .sidebar-close, .scrim, .search-toggle { display: none; }
 
-.hamburger {
+.topbar-title { min-width: 0; }
+
+.hamburger, .search-toggle {
   width: 42px; height: 42px; flex-shrink: 0;
   border: 1px solid var(--line); background: var(--card); border-radius: 12px;
   cursor: pointer; align-items: center; justify-content: center; color: #3F4652;
 }
-.hamburger:hover { background: var(--bg); }
+.hamburger:active, .search-toggle:active { background: var(--bg); }
+@media (hover: hover) {
+  .hamburger:hover, .search-toggle:hover { background: var(--bg); }
+}
 
 /* ---------- mobile: sidebar becomes an off-canvas drawer ---------- */
 
@@ -206,9 +211,17 @@ input.ltr, .ltr { direction: ltr; text-align: left; }
   /* Nav rows get taller so they clear the 44px minimum touch target. */
   .nav-btn { padding: 13px 14px; font-size: 15px; }
 
-  .topbar { height: auto; min-height: 64px; padding: 10px 16px; gap: 10px; flex-wrap: wrap; }
+  /* One tidy row: hamburger, title, then the two icon buttons pinned to the far
+     edge. The title takes the slack so nothing floats in the middle. */
+  .topbar { height: auto; min-height: 64px; padding: 10px 14px; gap: 9px; flex-wrap: wrap; }
   .topbar h1 { font-size: 17px; }
-  .topsearch { width: 100%; order: 3; }
+  .topbar-title { flex: 1; }
+  .search-toggle { display: flex; }
+
+  /* Folded away until the icon is tapped, then it takes its own full-width row. */
+  .topsearch { display: none; }
+  .topsearch.show { display: flex; width: 100%; order: 3; height: 44px; }
+
   .main { padding: 16px; }
 }
 

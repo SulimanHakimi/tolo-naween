@@ -2,7 +2,7 @@
 
 Supermarket management system: point of sale with printed bills and barcode scanning,
 stock with buy / retail / wholesale prices, suppliers and purchase orders, customer
-credit (قرض), returns, seasonal discounts, staff and salaries, reports, and backups.
+credit (قرض), returns, seasonal discounts, reports, and backups.
 
 The whole interface is Dari, right-to-left, on the Hijri Shamsi calendar.
 
@@ -23,7 +23,6 @@ Same stack as Hakimi Pharmacy, built as its own project — nothing in that fold
 | مشتریان و قرض‌ها | Customers, credit balances, settlements, purchase history |
 | راپورها | Daily / weekly / monthly figures, P&L, movers, cash book, returns, printing |
 | قیمت‌ها و تخفیفات | Retail/wholesale pricing, margins, discount rules |
-| کارمندان | Staff, job titles, salaries, salary payments |
 | امنیت و بک‌اپ | Backups, login accounts, settings, activity log |
 
 ## Accounts
@@ -198,9 +197,6 @@ check — there are no per-route permissions.
 | GET | `/returns` | |
 | GET, POST | `/discounts` | |
 | PUT, DELETE | `/discounts/:id` | PUT with only `active` toggles it |
-| GET, POST | `/employees` | |
-| PUT, DELETE | `/employees/:id` | |
-| POST | `/employees/:id/pay` | books a `salary`-tagged expense |
 | GET, POST | `/transactions` | cash book, receivables and payables |
 | GET | `/dashboard` | today's figures, alerts, week chart |
 | GET | `/reports`, `/reports/print` | `?period=daily\|weekly\|monthly` |

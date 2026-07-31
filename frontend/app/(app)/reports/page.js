@@ -108,7 +108,7 @@ export default function ReportsPage() {
     { label: 'قیمت تمام‌شد اجناس', value: d.cogs, color: C.faint },
     { label: 'تخفیفات داده‌شده', value: d.discounts, color: C.amberBright },
     { label: 'ضرر برگشتی‌ها', value: d.returnLoss, color: C.redBright },
-    { label: 'معاشات و مصارف', value: d.salaries + d.otherExpenses, color: C.amber },
+    { label: 'مصارف', value: d.otherExpenses, color: C.amber },
     { label: 'مفاد خالص', value: d.netProfit, color: C.greenBright }
   ];
   const plMax = Math.max(...plRows.map((r) => Math.abs(r.value)), 1);

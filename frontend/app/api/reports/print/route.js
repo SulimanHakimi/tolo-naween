@@ -37,10 +37,9 @@ export const GET = route(async (request) => {
 
   const pd = await periodData(period);
   const expenses = await Transaction.find({ type: 'مصرف', t: { $gte: pd.window.curFrom, $lt: pd.window.curTo } });
-  const salaries = expenses.filter((e) => e.tag === 'salary').reduce((t, e) => t + e.amount, 0);
-  const other = expenses.filter((e) => !['stock', 'salary', 'return'].includes(e.tag)).reduce((t, e) => t + e.amount, 0);
+  const other = expenses.filter((e) => !['stock', 'return'].includes(e.tag)).reduce((t, e) => t + e.amount, 0);
   const discounts = pd.sales.reduce((t, s) => t + (s.autoDisc || 0) + (s.disc || 0), 0);
-  const netProfit = pd.cur.profit - pd.returns.profitLoss - salaries - other;
+  const netProfit = pd.cur.profit - pd.returns.profitLoss - other;
 
   if (type === 'pl') {
     return ok({
@@ -49,7 +48,7 @@ export const GET = route(async (request) => {
       cogs: pd.cur.rev - pd.cur.profit,
       grossProfit: pd.cur.profit,
       discounts, returnLoss: pd.returns.profitLoss,
-      salaries, otherExpenses: other, netProfit
+      otherExpenses: other, netProfit
     });
   }
 

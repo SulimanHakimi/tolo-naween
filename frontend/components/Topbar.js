@@ -17,7 +17,11 @@ export default function Topbar({ title, sub, onMenu = () => {} }) {
   const [q, setQ] = useState('');
   const [hits, setHits] = useState([]);
   const [open, setOpen] = useState(false);
+  // On phones the search box is folded behind an icon — a permanently visible
+  // full-width field cost a whole row of a 375px screen.
+  const [searchOn, setSearchOn] = useState(false);
   const box = useRef(null);
+  const field = useRef(null);
 
   // Debounced so a fast typist does not fire a request per keystroke.
   useEffect(() => {
@@ -57,15 +61,21 @@ export default function Topbar({ title, sub, onMenu = () => {} }) {
         <Icon d={ICON.menu} size={21} width={1.9} />
       </button>
 
-      <div style={{ minWidth: 0 }}>
+      <div className="topbar-title">
         <h1 className="ellipsis">{title}</h1>
         <div className="sub">{sub}</div>
       </div>
       <div className="spacer desktop-only"></div>
 
-      <div className="topsearch" ref={box}>
+      {/* Toggles the folded search on phones; hidden on desktop where it is always open. */}
+      <button className="search-toggle" aria-label="جستجو"
+        onClick={() => { setSearchOn((v) => !v); setTimeout(() => field.current?.focus(), 0); }}>
+        <Icon d={searchOn ? ICON.close : ICON.search} size={19} width={1.9} />
+      </button>
+
+      <div className={`topsearch${searchOn ? ' show' : ''}`} ref={box}>
         <Icon d={ICON.search} size={18} stroke="#9CA3AF" />
-        <input value={q} onChange={(e) => setQ(e.target.value)} onFocus={() => hits.length && setOpen(true)}
+        <input ref={field} value={q} onChange={(e) => setQ(e.target.value)} onFocus={() => hits.length && setOpen(true)}
           placeholder="جستجوی جنس، مشتری، بل…" />
 
         {open && (

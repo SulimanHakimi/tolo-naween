@@ -7,7 +7,6 @@ export const LABELS = {
   cust: 'مشتریان و قرض‌ها',
   rep: 'راپورها',
   price: 'قیمت‌ها و تخفیفات',
-  emp: 'کارمندان',
   sec: 'امنیت و بک‌اپ'
 };
 
@@ -19,7 +18,6 @@ export const SUBTITLES = {
   cust: 'ثبت قرض مشتریان و تاریخچهٔ خرید',
   rep: 'راپور فروش، مفاد و ضرر، اجناس پرفروش',
   price: 'قیمت‌گذاری پرچون/عمده و تخفیف‌های موسمی',
-  emp: 'سطح دسترسی و محاسبهٔ معاش',
   sec: 'ثبت فعالیت‌ها و بک‌اپ معلومات'
 };
 
@@ -39,8 +37,6 @@ export const CATEGORIES = ['مواد خوراکی', 'نوشیدنی', 'لبنی�
 export const UNITS = ['دانه', 'کیلو', 'گرام', 'قطی', 'بسته', 'بوتل', 'بوجی', 'تخته', 'کارتن', 'لیتر', 'متر'];
 
 export const PAYMENTS = ['نقد', 'کارت', 'موبایل', 'قرض'];
-
-export const EMP_STATUS = ['فعال', 'رخصت', 'خارج شده'];
 
 // Job titles offered on the account form. They are labels only — every account
 // reaches every screen regardless of which one is picked.
