@@ -30,9 +30,8 @@ export default function EmployeesPage() {
 
   useEffect(() => {
     load();
-    // Only a manager may list login accounts; without that the picker just stays empty.
-    if (user?.perms?.sec) api('/users').then(setAccounts).catch(() => {});
-  }, [user]);
+    api('/users').then(setAccounts).catch(() => {});
+  }, []);
 
   const active = employees.filter((e) => e.status === 'فعال');
   const payroll = active.reduce((t, e) => t + e.salary, 0);

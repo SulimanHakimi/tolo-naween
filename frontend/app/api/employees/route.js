@@ -4,7 +4,7 @@ import { validateEmployee } from '@/lib/validate';
 
 export const dynamic = 'force-dynamic';
 
-export const GET = route(async () => ok(await Employee.find().sort({ status: 1, name: 1 })), { perms: ['emp'] });
+export const GET = route(async () => ok(await Employee.find().sort({ status: 1, name: 1 })));
 
 export const POST = route(async (request, { user }) => {
   const b = await body(request);
@@ -20,4 +20,4 @@ export const POST = route(async (request, { user }) => {
   });
   await logAct(user.name, `کارمند «${e.name}» را ثبت کرد`);
   return ok(e, 201);
-}, { perms: ['emp'] });
+});

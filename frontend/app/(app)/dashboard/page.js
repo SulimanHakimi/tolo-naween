@@ -118,11 +118,9 @@ export default function DashboardPage() {
             </div>
           )}
 
-          {user?.perms?.inv && (
-            <button onClick={() => router.push('/inventory')} className="btn btn-ghost btn-block btn-md" style={{ marginTop: 18, color: C.brand }}>
-              مشاهده گدام
-            </button>
-          )}
+          <button onClick={() => router.push('/inventory')} className="btn btn-ghost btn-block btn-md" style={{ marginTop: 18, color: C.brand }}>
+            مشاهده گدام
+          </button>
         </div>
       </div>
 
@@ -130,7 +128,7 @@ export default function DashboardPage() {
         <div className="card">
           <div className="row-between" style={{ marginBottom: 8 }}>
             <div className="card-title">آخرین فروشات امروز</div>
-            {user?.perms?.rep && <a onClick={() => router.push('/reports')} style={{ cursor: 'pointer', fontSize: 12.5 }}>همه راپورها</a>}
+            <a onClick={() => router.push('/reports')} style={{ cursor: 'pointer', fontSize: 12.5 }}>همه راپورها</a>
           </div>
 
           {d.recent.length === 0 ? (

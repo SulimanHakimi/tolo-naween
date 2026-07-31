@@ -47,4 +47,4 @@ export const POST = route(async (request, { params, user }) => {
 
   await logAct(user.name, `سفارش خرید ${po.po} را تحویل گرفت`);
   return ok(po);
-}, { perms: ['pur'] });
+});

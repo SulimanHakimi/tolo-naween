@@ -98,7 +98,7 @@ export function fromJalali(jy, jm, jd) {
   return new Date(g.gy, g.gm - 1, g.gd);
 }
 
-export function jDaysInMonth(jy, jm) {
+function jDaysInMonth(jy, jm) {
   if (jm <= 6) return 31;
   if (jm <= 11) return 30;
   return jalCal(jy).leap === 0 ? 30 : 29;

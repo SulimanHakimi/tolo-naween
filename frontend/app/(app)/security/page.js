@@ -2,14 +2,14 @@
 
 import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
-import { useApp, SCREEN_ORDER } from '@/lib/store';
+import { useApp } from '@/lib/store';
 import { ago, jRelative, num } from '@/lib/format';
 import { C, initialsOf } from '@/lib/ui';
-import { LABELS, ROLE_PRESETS } from '@/lib/labels';
+import { JOB_TITLES } from '@/lib/labels';
 import Icon, { ICON } from '@/components/icons';
 
 const CURRENCIES = ['AFN', 'USD', 'PKR'];
-const EMPTY_USER = { name: '', role: 'فروشنده', username: '', password: '', perms: {}, active: true };
+const EMPTY_USER = { name: '', role: JOB_TITLES[0], username: '', password: '', active: true };
 
 // Which icon and tint an activity row gets, from words that appear in the action.
 const LOG_STYLE = [
@@ -94,16 +94,12 @@ export default function SecurityPage() {
   }
 
   function openNewUser() {
-    setForm({ ...EMPTY_USER, perms: presetPerms('فروشنده') });
+    setForm({ ...EMPTY_USER });
     setError('');
   }
 
-  const presetPerms = (role) => Object.fromEntries(
-    SCREEN_ORDER.map((k) => [k, (ROLE_PRESETS[role] || []).includes(k)])
-  );
-
   function openEditUser(u) {
-    setForm({ _id: u._id, name: u.name, role: u.role, username: u.username, password: '', perms: { ...u.perms }, active: u.active });
+    setForm({ _id: u._id, name: u.name, role: u.role, username: u.username, password: '', active: u.active });
     setError('');
   }
 
@@ -112,7 +108,7 @@ export default function SecurityPage() {
     setBusy(true); setError('');
     try {
       const path = form._id ? `/users/${form._id}` : '/users';
-      const body = { name: form.name, role: form.role, perms: form.perms, active: form.active };
+      const body = { name: form.name, role: form.role, active: form.active };
       if (!form._id) { body.username = form.username; body.password = form.password; }
       await api(path, { method: form._id ? 'PUT' : 'POST', body });
       setNotice(form._id ? 'حساب تغییر یافت.' : 'حساب کاربری ساخته شد.');
@@ -150,7 +146,6 @@ export default function SecurityPage() {
   const backupStale = backupAge === null || backupAge > 1.5;
 
   const setP = (k) => (e) => setProfile((p) => ({ ...p, [k]: e.target.value }));
-  const grantedCount = (perms) => SCREEN_ORDER.filter((k) => perms?.[k]).length;
 
   if (!profile) return null;
 
@@ -224,7 +219,7 @@ export default function SecurityPage() {
                       {String(u._id) === String(user?.id) && <span style={{ color: C.faint, fontWeight: 400 }}> (خودم)</span>}
                     </div>
                     <div className="ellipsis" style={{ fontSize: 11, color: C.faint }}>
-                      <span className="ltr">{u.username}</span> · {u.role} · {grantedCount(u.perms)} صفحه
+                      <span className="ltr">{u.username}</span> · {u.role}
                     </div>
                   </div>
                   {!u.active && <span className="pill pill-grey">غیرفعال</span>}
@@ -343,9 +338,10 @@ export default function SecurityPage() {
       {form && (
         <div className="overlay">
           <div className="modal modal-md">
-            <h2>{form._id ? `دسترسی‌های ${form.name}` : 'حساب کاربری جدید'}</h2>
+            <h2>{form._id ? `حساب ${form.name}` : 'حساب کاربری جدید'}</h2>
             <div className="modal-sub">
-              هر حساب تنها صفحاتی را می‌بیند که اینجا تیک خورده، و API هم همان محدودیت را تطبیق می‌کند.
+              هر حساب به تمام صفحات دسترسی کامل دارد. «وظیفه» تنها یک عنوان است که زیر نام
+              در منو نشان داده می‌شود و چیزی را محدود نمی‌کند.
             </div>
 
             <div className="form-grid">
@@ -353,16 +349,10 @@ export default function SecurityPage() {
                 <div><div className="field-label">نام</div>
                   <input value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} className="field" /></div>
                 <div>
-                  <div className="field-label">وظیفه</div>
-                  <select value={form.role}
-                    onChange={(e) => setForm((f) => ({
-                      ...f, role: e.target.value,
-                      // Changing the role reloads its usual permissions as a starting point.
-                      perms: ROLE_PRESETS[e.target.value] ? presetPerms(e.target.value) : f.perms
-                    }))}
-                    className="field">
-                    {Object.keys(ROLE_PRESETS).map((r) => <option key={r}>{r}</option>)}
-                  </select>
+                  <div className="field-label">وظیفه (عنوان)</div>
+                  <input value={form.role} onChange={(e) => setForm((f) => ({ ...f, role: e.target.value }))}
+                    list="tn-titles" className="field" />
+                  <datalist id="tn-titles">{JOB_TITLES.map((r) => <option key={r} value={r} />)}</datalist>
                 </div>
               </div>
 
@@ -380,19 +370,6 @@ export default function SecurityPage() {
                   </div>
                 </div>
               )}
-
-              <div>
-                <div className="field-label">صفحاتی که می‌تواند باز کند</div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-                  {SCREEN_ORDER.map((k) => (
-                    <label key={k} className="row" style={{ gap: 8, fontSize: 13, cursor: 'pointer', padding: '6px 8px', borderRadius: 9, background: form.perms[k] ? C.blueSoft : C.bg }}>
-                      <input type="checkbox" checked={!!form.perms[k]} style={{ width: 16, height: 16, accentColor: C.brand, cursor: 'pointer' }}
-                        onChange={(e) => setForm((f) => ({ ...f, perms: { ...f.perms, [k]: e.target.checked } }))} />
-                      {LABELS[k]}
-                    </label>
-                  ))}
-                </div>
-              </div>
 
               {form._id && (
                 <label className="row" style={{ gap: 9, fontSize: 13, cursor: 'pointer', marginTop: 4 }}>

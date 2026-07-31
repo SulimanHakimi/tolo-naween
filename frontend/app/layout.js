@@ -3,8 +3,8 @@ import Providers from './providers';
 import NoZoom from './no-zoom';
 
 export const metadata = {
-  title: 'طلوع ناوین — سیستم مدیریت سوپرمارکت',
-  description: 'صندوق فروش، گدام، تهیه‌کنندگان، قرض مشتریان و راپورها برای سوپرمارکت طلوع ناوین.'
+  title: 'طلوع نوین — سیستم مدیریت سوپرمارکت',
+  description: 'صندوق فروش، گدام، تهیه‌کنندگان، قرض مشتریان و راپورها برای سوپرمارکت طلوع نوین.'
 };
 
 // Locked at 1x. Android/Chrome honours maximumScale + userScalable; iOS Safari

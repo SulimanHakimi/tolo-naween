@@ -24,4 +24,4 @@ export const POST = route(async (request, { params, user }) => {
   });
   await logAct(user.name, `معاش «${e.name}» را پرداخت کرد`);
   return ok(e);
-}, { perms: ['emp'] });
+});

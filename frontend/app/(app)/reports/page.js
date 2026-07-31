@@ -46,8 +46,6 @@ export default function ReportsPage() {
     return sales.filter((s) => [s.no, s.customer, s.phone].some((v) => String(v || '').toLowerCase().includes(q)));
   }, [sales, billSearch]);
 
-  const canReturn = !!user?.perms?.pos || !!user?.perms?.rep;
-
   const returnable = (s) => s.items.some((i) => i.qty - (i.returned || 0) > 0);
 
   function openReturn(sale) {
@@ -276,7 +274,7 @@ export default function ReportsPage() {
                       <td><span className={`pill ${s.payment === 'قرض' ? 'pill-amber' : 'pill-green'}`}>{s.payment}</span></td>
                       <td className="num semi">{fmt(s.total)}</td>
                       <td>
-                        {canReturn && returnable(s) && (
+                        {returnable(s) && (
                           <button onClick={() => openReturn(s)} className="btn btn-ghost btn-sm" title="برگشت جنس">
                             <Icon d={ICON.undo} size={14} stroke={C.muted} />برگشت
                           </button>

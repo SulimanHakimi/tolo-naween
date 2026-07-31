@@ -157,32 +157,90 @@ input.ltr, .ltr { direction: ltr; text-align: left; }
 
 .main { flex: 1; overflow-y: auto; padding: 26px 28px 40px; }
 
-.mobile-only { display: none; }
+
+/* The hamburger and the drawer's own close button exist only on small screens; the
+   desktop sidebar is always visible and needs neither. */
+.hamburger, .sidebar-close, .scrim { display: none; }
+
+.hamburger {
+  width: 42px; height: 42px; flex-shrink: 0;
+  border: 1px solid var(--line); background: var(--card); border-radius: 12px;
+  cursor: pointer; align-items: center; justify-content: center; color: #3F4652;
+}
+.hamburger:hover { background: var(--bg); }
+
+/* ---------- mobile: sidebar becomes an off-canvas drawer ---------- */
 
 @media (max-width: 1000px) {
-  .app { flex-direction: column; }
+  .hamburger { display: flex; }
+  .desktop-only { display: none !important; }
+
+  /* Off-canvas. RTL, so it rests off the right edge and slides in from there.
+     `visibility` is animated too, otherwise the hidden drawer still swallows
+     taps on the page beneath it. */
   .sidebar {
-    width: auto; height: auto; position: sticky; top: 0; z-index: 30;
-    flex-direction: row; align-items: center; flex-wrap: wrap; gap: 8px; padding: 10px 14px;
+    position: fixed; top: 0; right: 0; bottom: 0; z-index: 70;
+    width: 288px; max-width: 86vw; height: 100dvh;
+    transform: translateX(100%); visibility: hidden;
+    transition: transform .26s ease, visibility .26s;
+    box-shadow: -8px 0 28px rgba(14, 27, 36, 0.3);
   }
-  .sidebar-brand { padding: 0; border-bottom: none; flex: 1; }
-  .brand-mark { width: 36px; height: 36px; border-radius: 11px; }
-  .sidebar-nav { order: 3; width: 100%; flex-direction: row; padding: 4px 0 0; overflow-x: auto; }
-  .nav-btn { width: auto; white-space: nowrap; padding: 9px 12px; font-size: 13px; }
-  .sidebar-foot { padding: 0; border-top: none; }
-  .sidebar-user { background: none; padding: 0; }
-  .sidebar-user .who { display: none; }
-  .backup-line { display: none; }
-  .topbar { height: auto; padding: 12px 16px; flex-wrap: wrap; }
+  .sidebar.open { transform: translateX(0); visibility: visible; }
+
+  .scrim {
+    display: block; position: fixed; inset: 0; z-index: 65;
+    background: rgba(14, 27, 36, 0.5);
+    opacity: 0; pointer-events: none; transition: opacity .26s ease;
+    /* Tapping the dimmed page is the fastest way to dismiss a drawer. */
+    border: none; padding: 0;
+  }
+  .scrim.open { opacity: 1; pointer-events: auto; }
+
+  .sidebar-close {
+    display: flex; align-items: center; justify-content: center;
+    width: 34px; height: 34px; flex-shrink: 0; margin-right: auto;
+    border: none; border-radius: 10px; cursor: pointer;
+    background: rgba(255, 255, 255, 0.08); color: #CFE0EA;
+  }
+
+  /* Nav rows get taller so they clear the 44px minimum touch target. */
+  .nav-btn { padding: 13px 14px; font-size: 15px; }
+
+  .topbar { height: auto; min-height: 64px; padding: 10px 16px; gap: 10px; flex-wrap: wrap; }
+  .topbar h1 { font-size: 17px; }
   .topsearch { width: 100%; order: 3; }
   .main { padding: 16px; }
-  .mobile-only { display: block; }
-  .desktop-only { display: none !important; }
 }
 
+/* Locks the page behind an open drawer so the wrong thing cannot scroll. */
+body.drawer-open { overflow: hidden; }
+
 @media (max-width: 560px) {
-  .main { padding: 12px; }
-  .brand-sub { display: none; }
+  .main { padding: 12px 12px 28px; }
+  .topbar { padding: 10px 12px; }
+  .topbar .sub { display: none; }
+  /* On the narrowest screens the label goes and the + carries the button. */
+  .btn-label { display: none; }
+
+  /* Card headers carry a title, a count, filters, a search box and a button. Let
+     them stack instead of squeezing, and let the controls span the full width. */
+  .card-head { flex-wrap: wrap; padding: 14px 16px; }
+  .card-head .inline-search { width: 100% !important; }
+  .card-head .btn { flex: 1; }
+  .card-body, table.data th:first-child, table.data td:first-child { padding-right: 16px; }
+
+  /* A modal is nearly the whole screen here, so trim the frame and let the action
+     row wrap — three buttons do not fit on one line at 360px. */
+  .overlay { padding: 10px; align-items: flex-start; }
+  .modal { padding: 18px 16px; border-radius: 16px; max-height: 94vh; }
+  .modal-actions { flex-wrap: wrap; }
+  .modal-actions .btn { min-width: 46%; }
+
+  /* Four payment buttons become two rows rather than four cramped columns. */
+  .pay-grid { grid-template-columns: 1fr 1fr; }
+
+  /* Printed documents are read on paper, but the preview should still fit. */
+  .doc { padding: 20px 16px; }
 }
 
 /* ---------- building blocks ---------- */
@@ -191,14 +249,12 @@ input.ltr, .ltr { direction: ltr; text-align: left; }
   background: var(--card); border: 1px solid var(--border);
   border-radius: 16px; padding: 18px; box-shadow: var(--shadow-card);
 }
-.card-flush { padding: 0; overflow: hidden; }
 .card-head {
   display: flex; align-items: center; gap: 12px;
   padding: 16px 20px; border-bottom: 1px solid var(--border);
 }
 .card-title { font-size: 15px; font-weight: 700; color: var(--text); }
 .card-note { font-size: 12px; color: var(--faint); }
-.card-body { padding: 18px 20px; }
 
 .kpi-icon { width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .kpi-value { font-size: 26px; font-weight: 800; margin-top: 14px; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
@@ -354,7 +410,6 @@ select.field { cursor: pointer; }
 .banner { font-size: 13px; font-weight: 500; border-radius: 12px; padding: 11px 15px; }
 .banner-error { color: var(--red); background: var(--red-soft); font-weight: 600; }
 .banner-ok { color: var(--green); background: var(--green-soft); font-weight: 600; }
-.banner-warn { color: #7A5010; background: var(--amber-soft); }
 
 .alert-bar {
   display: flex; align-items: center; gap: 13px;
@@ -430,11 +485,9 @@ select.field { cursor: pointer; }
 }
 .prod-card:hover:not(:disabled) { transform: translateY(-2px); border-color: var(--brand); }
 .prod-card:disabled { opacity: 0.45; cursor: not-allowed; }
-.prod-thumb {
-  height: 74px; border-radius: 11px; display: flex; align-items: center; justify-content: center;
-  margin-bottom: 12px; font-size: 22px; font-weight: 800;
-}
-.prod-name { font-size: 13px; font-weight: 600; line-height: 1.35; height: 35px; overflow: hidden; }
+/* Fixed height keeps the price row aligned across a row of cards whose names
+   wrap to one line or two. */
+.prod-name { font-size: 14px; font-weight: 600; line-height: 1.4; height: 39px; overflow: hidden; }
 .prod-price { font-size: 14px; font-weight: 800; color: var(--brand); font-variant-numeric: tabular-nums; }
 
 .cart {

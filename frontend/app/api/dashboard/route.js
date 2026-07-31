@@ -57,4 +57,4 @@ export const GET = route(async () => {
     })),
     top
   });
-}, { perms: ['dash'] });
+});

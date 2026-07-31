@@ -16,10 +16,9 @@ export const SCREEN_PATH = {
 
 export const screenKeyFor = (pathname) => Object.keys(SCREEN_PATH).find((k) => SCREEN_PATH[k] === pathname);
 
-export function firstScreen(user) {
-  const k = SCREEN_ORDER.find((s) => user?.perms?.[s]);
-  return k ? SCREEN_PATH[k] : '/';
-}
+// Where signing in lands. One account type reaching every screen means this is
+// always the dashboard.
+export const firstScreen = () => SCREEN_PATH[SCREEN_ORDER[0]];
 
 const DEFAULT_SETTINGS = {
   currency: 'AFN', vatRate: 0, lowStockThreshold: 10, expiryWarnDays: 60,

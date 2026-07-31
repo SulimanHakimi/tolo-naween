@@ -63,4 +63,4 @@ export const POST = route(async (request, { params, user }) => {
 
   await logAct(user.name, `برگشتی ${rec.rn} برای بل #${sale.no} را ثبت کرد`);
   return ok({ return: rec, sale }, 201);
-}, { perms: ['pos', 'rep'] });
+});

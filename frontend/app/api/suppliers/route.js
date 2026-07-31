@@ -18,4 +18,4 @@ export const POST = route(async (request, { user }) => {
   });
   await logAct(user.name, `تهیه‌کننده «${s.name}» را ثبت کرد`);
   return ok(s, 201);
-}, { perms: ['pur'] });
+});

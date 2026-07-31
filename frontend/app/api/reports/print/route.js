@@ -60,4 +60,4 @@ export const GET = route(async (request) => {
     avg: pd.cur.bills ? pd.cur.rev / pd.cur.bills : 0,
     top: mv.top, cats: mv.cats
   });
-}, { perms: ['rep'] });
+});

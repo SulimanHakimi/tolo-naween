@@ -40,7 +40,7 @@ export const PUT = route(async (request, { params, user }) => {
   await p.save();
   await logAct(user.name, `جنس «${p.name}» را تغییر داد`);
   return ok(p);
-}, { perms: ['inv', 'price'] });
+});
 
 export const DELETE = route(async (request, { params, user }) => {
   const p = await Product.findById(params.id);
@@ -51,4 +51,4 @@ export const DELETE = route(async (request, { params, user }) => {
   await p.deleteOne();
   await logAct(user.name, `جنس «${p.name}» را حذف کرد`);
   return ok({ ok: true });
-}, { perms: ['inv'] });
+});

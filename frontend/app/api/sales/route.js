@@ -14,7 +14,7 @@ export const GET = route(async (request) => {
   if (p.get('customer')) filter.customer = p.get('customer');
 
   return ok(await Sale.find(filter).sort({ date: -1 }).limit(limit));
-}, { perms: ['rep', 'dash', 'pos', 'cust'] });
+});
 
 /**
  * Complete a sale from the till. Prices are recomputed here from the stored product
@@ -94,4 +94,4 @@ export const POST = route(async (request, { user }) => {
 
   await logAct(user.name, `فروش ${pay} بل #${sale.no} را ثبت کرد`);
   return ok(sale, 201);
-}, { perms: ['pos'] });
+});

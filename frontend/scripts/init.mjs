@@ -1,6 +1,6 @@
-// One-time setup: creates the staff accounts and the settings row.
+// One-time setup: creates the manager account and the settings row.
 // Creates no products, suppliers, customers or sales — the shop enters its own data.
-// Safe to re-run: existing accounts are left untouched.
+// Safe to re-run: an existing account is left untouched.
 //
 //   npm run init
 import dotenv from 'dotenv';
@@ -11,59 +11,43 @@ import bcrypt from 'bcryptjs';
 dotenv.config({ path: '.env.local' });
 
 const { default: connectDB } = await import('../lib/db.js');
-const { User, Counter, PERM_KEYS, getSettings } = await import('../lib/models/index.js');
-const { ROLE_PRESETS } = await import('../lib/labels.js');
+const { User, Counter, getSettings } = await import('../lib/models/index.js');
 
 const initials = (name) => String(name || '').trim().slice(0, 1) || '؟';
-const permsFor = (role) => Object.fromEntries(PERM_KEYS.map((k) => [k, (ROLE_PRESETS[role] || []).includes(k)]));
-
-// Only accounts whose password is set in .env.local get created. The manager is
-// required; the other three are optional and can be added later from the app.
-const ACCOUNTS = [
-  { role: 'مدیر', envPrefix: 'MANAGER', fallbackName: 'مدیر عمومی', fallbackUser: 'manager', required: true },
-  { role: 'فروشنده', envPrefix: 'SELLER', fallbackName: 'فروشنده', fallbackUser: 'seller' },
-  { role: 'صندوق‌دار', envPrefix: 'CASHIER', fallbackName: 'صندوق‌دار', fallbackUser: 'cashier' },
-  { role: 'گدام‌دار', envPrefix: 'STOREKEEPER', fallbackName: 'مسئول گدام', fallbackUser: 'store' }
-];
 
 async function main() {
-  const planned = ACCOUNTS.map((a) => ({
-    ...a,
-    name: process.env[`${a.envPrefix}_NAME`] || a.fallbackName,
-    username: (process.env[`${a.envPrefix}_USERNAME`] || a.fallbackUser).toLowerCase().trim(),
-    password: process.env[`${a.envPrefix}_PASSWORD`] || ''
-  }));
+  const name = process.env.ADMIN_NAME || 'مدیر عمومی';
+  const role = process.env.ADMIN_ROLE || 'مدیر عمومی';
+  const username = (process.env.ADMIN_USERNAME || 'manager').toLowerCase().trim();
+  const password = process.env.ADMIN_PASSWORD || '';
 
-  const manager = planned.find((a) => a.required);
-  if (!manager.password) {
-    console.error('MANAGER_PASSWORD را در .env.local تعیین کنید و بعد init را اجرا کنید.');
-    console.error('Set MANAGER_PASSWORD in .env.local before running init.');
+  if (!password) {
+    console.error('ADMIN_PASSWORD را در .env.local تعیین کنید و بعد init را اجرا کنید.');
+    console.error('Set ADMIN_PASSWORD in .env.local before running init.');
     process.exit(1);
   }
-  const tooShort = planned.filter((a) => a.password && a.password.length < 8);
-  if (tooShort.length) {
-    console.error('هر رمز باید حداقل ۸ حرف باشد: ' + tooShort.map((a) => a.envPrefix).join(', '));
+  if (password.length < 8) {
+    console.error('رمز باید حداقل ۸ حرف باشد.');
+    process.exit(1);
+  }
+  if (!/^[a-z0-9._-]{3,20}$/.test(username)) {
+    console.error('ADMIN_USERNAME باید ۳ تا ۲۰ حرف انگلیسی، رقم، نقطه یا خط تیره باشد.');
     process.exit(1);
   }
 
   await connectDB();
 
-  for (const a of planned) {
-    if (!a.password) {
-      console.log(`- ${a.role}: رمز تعیین نشده، رد شد (${a.envPrefix}_PASSWORD)`);
-      continue;
-    }
-    const existing = await User.findOne({ username: a.username });
-    if (existing) {
-      console.log(`- ${a.role}: حساب «${existing.username}» موجود است — تغییر نیافت.`);
-      continue;
-    }
+  const existing = await User.findOne({ username });
+  if (existing) {
+    console.log(`حساب «${existing.username}» موجود است — تغییر نیافت.`);
+    console.log('برای تغییر رمز: npm run set-password -- ' + existing.username + ' <new password>');
+  } else {
     await User.create({
-      name: a.name, role: a.role, initials: initials(a.name),
-      username: a.username, passwordHash: await bcrypt.hash(a.password, 10),
-      active: true, perms: permsFor(a.role)
+      name, role, initials: initials(name), username,
+      passwordHash: await bcrypt.hash(password, 10), active: true
     });
-    console.log(`+ ${a.role} ساخته شد: ${a.username}`);
+    console.log(`+ حساب ساخته شد: ${username} (${name})`);
+    console.log('  این حساب به تمام صفحات دسترسی دارد.');
   }
 
   // Numbering starts at 1000 so the first bill reads #1001.
@@ -73,6 +57,7 @@ async function main() {
 
   await getSettings();
   console.log('\nتنظیمات آماده است. وارد شوید، بعد تهیه‌کنندگان و اجناس خود را ثبت کنید.');
+  console.log('حساب‌های بیشتر را از صفحهٔ «امنیت و بک‌اپ» بسازید — همه دسترسی کامل دارند.');
   await mongoose.disconnect();
 }
 

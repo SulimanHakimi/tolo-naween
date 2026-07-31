@@ -29,4 +29,4 @@ export const PUT = route(async (request, { user }) => {
   await s.save();
   await logAct(user.name, 'تنظیمات سیستم را تغییر داد');
   return ok(s);
-}, { perms: ['sec'] });
+});

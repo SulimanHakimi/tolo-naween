@@ -48,4 +48,4 @@ export const GET = route(async (request) => {
     receivable: receivable[0]?.sum || 0,
     payable: payable[0]?.sum || 0
   });
-}, { perms: ['rep'] });
+});

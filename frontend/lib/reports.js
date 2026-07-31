@@ -6,7 +6,7 @@ const DAY = 864e5;
 export const midnight = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
 
 /** Calendar windows — never row counts, because days without sales have no rows. */
-export function windowFor(period) {
+function windowFor(period) {
   const today = midnight(new Date());
   const days = { daily: 1, weekly: 7, monthly: 30 }[period] || 1;
   const curFrom = new Date(today.getTime() - (days - 1) * DAY);

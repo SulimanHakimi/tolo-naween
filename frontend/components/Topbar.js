@@ -10,16 +10,14 @@ import Icon, { ICON } from './icons';
 const KIND_LABEL = { product: 'جنس', customer: 'مشتری', sale: 'بل', supplier: 'تهیه‌کننده' };
 const KIND_PATH = { product: '/inventory', customer: '/customers', sale: '/reports', supplier: '/purchasing' };
 
-export default function Topbar({ title, sub }) {
-  const { user, settings } = useApp();
+export default function Topbar({ title, sub, onMenu = () => {} }) {
+  const { settings } = useApp();
   const fmt = makeFmt(settings.currency);
   const router = useRouter();
   const [q, setQ] = useState('');
   const [hits, setHits] = useState([]);
   const [open, setOpen] = useState(false);
   const box = useRef(null);
-
-  const canPos = !!user?.perms?.pos;
 
   // Debounced so a fast typist does not fire a request per keystroke.
   useEffect(() => {
@@ -54,8 +52,13 @@ export default function Topbar({ title, sub }) {
 
   return (
     <header className="topbar">
-      <div>
-        <h1>{title}</h1>
+      {/* Shown under 1000px, where the sidebar has become a drawer. */}
+      <button className="hamburger" onClick={onMenu} aria-label="باز کردن منو">
+        <Icon d={ICON.menu} size={21} width={1.9} />
+      </button>
+
+      <div style={{ minWidth: 0 }}>
+        <h1 className="ellipsis">{title}</h1>
         <div className="sub">{sub}</div>
       </div>
       <div className="spacer desktop-only"></div>
@@ -82,18 +85,14 @@ export default function Topbar({ title, sub }) {
         )}
       </div>
 
-      {canPos && (
-        <>
-          <button onClick={startScan} className="btn btn-ghost desktop-only" title="کرسر را در خانهٔ اسکن بارکد صندوق می‌گذارد">
-            <Icon d={ICON.barcode} size={17} />
-            اسکن بارکد
-          </button>
-          <button onClick={() => router.push('/pos')} className="btn btn-primary">
-            <Icon d={ICON.plus} size={18} width={2} />
-            فروش جدید
-          </button>
-        </>
-      )}
+      <button onClick={startScan} className="btn btn-ghost desktop-only" title="کرسر را در خانهٔ اسکن بارکد صندوق می‌گذارد">
+        <Icon d={ICON.barcode} size={17} />
+        اسکن بارکد
+      </button>
+      <button onClick={() => router.push('/pos')} className="btn btn-primary" title="فروش جدید">
+        <Icon d={ICON.plus} size={18} width={2} />
+        <span className="btn-label">فروش جدید</span>
+      </button>
     </header>
   );
 }

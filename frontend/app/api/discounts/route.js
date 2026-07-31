@@ -21,4 +21,4 @@ export const POST = route(async (request, { user }) => {
   });
   await logAct(user.name, `تخفیف «${d.name}» را ایجاد کرد`);
   return ok(d, 201);
-}, { perms: ['price'] });
+});

@@ -22,7 +22,7 @@ export const GET = route(async () => {
     receivable: customers.reduce((t, c) => t + c.credit, 0),
     payable: suppliers.reduce((t, s) => t + s.balance, 0)
   });
-}, { perms: ['rep'] });
+});
 
 export const POST = route(async (request, { user }) => {
   const { type, desc, amount } = await body(request);
@@ -33,4 +33,4 @@ export const POST = route(async (request, { user }) => {
   const tx = await Transaction.create({ type, tag: 'other', desc: desc.trim(), amount: +amount });
   await logAct(user.name, `${type} ثبت کرد: ${tx.desc}`);
   return ok(tx, 201);
-}, { perms: ['rep'] });
+});

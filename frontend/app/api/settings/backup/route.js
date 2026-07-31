@@ -23,4 +23,4 @@ export const POST = route(async (request, { user }) => {
   await logAct(user.name, 'بک‌اپ معلومات را گرفت');
 
   return ok({ settings: s, dump });
-}, { perms: ['sec'] });
+});

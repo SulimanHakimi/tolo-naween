@@ -13,4 +13,4 @@ export const DELETE = route(async (request, { params, user }) => {
   await po.deleteOne();
   await logAct(user.name, `سفارش خرید ${po.po} را لغو کرد`);
   return ok({ ok: true });
-}, { perms: ['pur'] });
+});

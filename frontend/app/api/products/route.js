@@ -27,4 +27,4 @@ export const POST = route(async (request, { user }) => {
   });
   await logAct(user.name, `جنس «${p.name}» را ثبت کرد`);
   return ok(p, 201);
-}, { perms: ['inv'] });
+});

@@ -37,7 +37,7 @@ export const PUT = route(async (request, { params, user }) => {
   await d.save();
   await logAct(user.name, `تخفیف «${d.name}» را تغییر داد`);
   return ok(d);
-}, { perms: ['price'] });
+});
 
 export const DELETE = route(async (request, { params, user }) => {
   const d = await Discount.findById(params.id);
@@ -45,4 +45,4 @@ export const DELETE = route(async (request, { params, user }) => {
   await d.deleteOne();
   await logAct(user.name, `تخفیف «${d.name}» را حذف کرد`);
   return ok({ ok: true });
-}, { perms: ['price'] });
+});

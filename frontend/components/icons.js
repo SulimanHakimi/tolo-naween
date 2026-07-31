@@ -27,8 +27,9 @@ export const ICON = {
   home: 'M3 9l9-6 9 6v10a1 1 0 0 1-1 1h-4v-6H8v6H4a1 1 0 0 1-1-1z',
   undo: 'M3 7v6h6 M3.5 13a9 9 0 1 0 2.6-6.4L3 9',
   trash: 'M3 6h18 M8 6V4h8v2 M19 6l-1 15H6L5 6',
-  clock: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M12 7v5l4 2',
   key: 'M14.5 10.5a4 4 0 1 0-5 3.9V17h2v2h2v-2.2l1-1V13h2v-2.5z',
+  menu: 'M3 6h18 M3 12h18 M3 18h18',
+  close: 'M18 6 6 18 M6 6l12 12',
   wallet: 'M3 6h15a3 3 0 0 1 3 3v8a2 2 0 0 1-2 2H4a1 1 0 0 1-1-1z M17 13h.01',
   download: 'M12 3v12 M7 11l5 5 5-5 M4 21h16'
 };

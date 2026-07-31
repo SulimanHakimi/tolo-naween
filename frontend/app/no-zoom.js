@@ -29,10 +29,14 @@ export default function NoZoom() {
       if (e.ctrlKey || e.metaKey) e.preventDefault();
     };
 
-    // Ctrl/Cmd with + - 0 — keyboard zoom on desktop.
+    // Ctrl/Cmd with + - 0 — keyboard zoom on desktop. `code` is checked as well as
+    // `key`, because the numpad +/- report differently across layouts and would
+    // otherwise slip through.
+    const ZOOM_KEYS = ['+', '=', '-', '_', '0'];
+    const ZOOM_CODES = ['NumpadAdd', 'NumpadSubtract', 'Numpad0', 'Digit0', 'Equal', 'Minus'];
     const onKeyDown = (e) => {
       if (!(e.ctrlKey || e.metaKey)) return;
-      if (['+', '=', '-', '_', '0'].includes(e.key)) e.preventDefault();
+      if (ZOOM_KEYS.includes(e.key) || ZOOM_CODES.includes(e.code)) e.preventDefault();
     };
 
     const opts = { passive: false };

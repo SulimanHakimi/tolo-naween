@@ -6,7 +6,7 @@ import { useApp } from '@/lib/store';
 import { useFocusTerm } from '@/lib/focus';
 import { makeFmt, daysTo } from '@/lib/format';
 import { activeDiscounts, priceLine, cartTotals } from '@/lib/pricing';
-import { C, TINTS, abbr, stockStatus } from '@/lib/ui';
+import { C, stockStatus } from '@/lib/ui';
 import { PAYMENTS } from '@/lib/labels';
 import Icon, { ICON } from '@/components/icons';
 import BillModal from '@/components/BillModal';
@@ -178,15 +178,14 @@ export default function PosPage() {
             )}
 
             <div className="pos-grid">
-              {visible.map((p, i) => {
+              {visible.map((p) => {
                 const s = stockStatus(p, settings, daysTo(p.expiry));
                 const out = p.stock <= 0;
-                const [tint, colour] = TINTS[i % TINTS.length];
                 return (
                   <button key={p._id} onClick={() => add(p._id)} disabled={out} className="prod-card">
-                    <div className="prod-thumb" style={{ background: tint, color: colour }}>{abbr(p.name)}</div>
                     <div className="prod-name">{p.name}</div>
-                    <div className="row-between" style={{ marginTop: 8 }}>
+                    <div style={{ fontSize: 11, color: C.faint, marginTop: 3 }}>{p.category}</div>
+                    <div className="row-between" style={{ marginTop: 10 }}>
                       <span className="prod-price">{fmt(p.retail)}</span>
                       <span style={{ fontSize: 11, color: s.key === 'ok' ? C.faint : s.color, fontWeight: s.key === 'ok' ? 400 : 600 }}>
                         {out ? 'تمام شده' : `${p.stock} ${p.unit}`}

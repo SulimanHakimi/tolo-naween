@@ -26,7 +26,7 @@ export const PUT = route(async (request, { params, user }) => {
   await c.save();
   await logAct(user.name, `معلومات مشتری «${c.name}» را تغییر داد`);
   return ok(c);
-}, { perms: ['cust'] });
+});
 
 export const DELETE = route(async (request, { params, user }) => {
   const c = await Customer.findById(params.id);
@@ -36,4 +36,4 @@ export const DELETE = route(async (request, { params, user }) => {
   await c.deleteOne();
   await logAct(user.name, `مشتری «${c.name}» را حذف کرد`);
   return ok({ ok: true });
-}, { perms: ['cust'] });
+});

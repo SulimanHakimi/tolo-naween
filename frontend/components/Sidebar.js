@@ -11,7 +11,11 @@ const NAV_ICON = {
   rep: ICON.chart, price: ICON.tag, emp: ICON.badge, sec: ICON.shield
 };
 
-export default function Sidebar() {
+/**
+ * The nav. On desktop it is a fixed column; under 1000px the same markup becomes an
+ * off-canvas drawer driven by `open`, with the layout owning that state.
+ */
+export default function Sidebar({ open = false, onClose = () => {} }) {
   const { user, L, signOut, settings, alertCount } = useApp();
   const pathname = usePathname();
   const router = useRouter();
@@ -20,21 +24,31 @@ export default function Sidebar() {
   const backupOk = settings.lastBackup
     && Date.now() - new Date(settings.lastBackup).getTime() < 36 * 3600e3;
 
+  // Tapping the current page would not change the route, so the layout's
+  // close-on-navigate effect never fires — close it here instead.
+  const go = (path) => {
+    if (path === pathname) onClose();
+    else router.push(path);
+  };
+
   return (
-    <aside className="sidebar">
+    <aside className={`sidebar${open ? ' open' : ''}`} aria-hidden={undefined}>
       <div className="sidebar-brand">
         <div className="brand-mark">
           <Icon d={ICON.home} size={24} stroke="#fff" width={1.9} />
         </div>
-        <div>
-          <div className="brand-name">{settings.storeName || 'طلوع ناوین'}</div>
+        <div style={{ minWidth: 0 }}>
+          <div className="brand-name ellipsis">{settings.storeName || 'طلوع نوین'}</div>
           <div className="brand-sub">سیستم مدیریت سوپرمارکت</div>
         </div>
+        <button className="sidebar-close" onClick={onClose} aria-label="بستن منو">
+          <Icon d={ICON.close} size={18} width={2} />
+        </button>
       </div>
 
       <nav className="sidebar-nav">
-        {SCREEN_ORDER.filter((k) => user.perms?.[k]).map((k) => (
-          <button key={k} onClick={() => router.push(SCREEN_PATH[k])}
+        {SCREEN_ORDER.map((k) => (
+          <button key={k} onClick={() => go(SCREEN_PATH[k])}
             className={`nav-btn${pathname === SCREEN_PATH[k] ? ' active' : ''}`}>
             <Icon d={NAV_ICON[k]} size={20} width={1.7} />
             <span style={{ flex: 1 }}>{L[k]}</span>

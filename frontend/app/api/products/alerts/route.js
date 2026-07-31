@@ -18,4 +18,4 @@ export const GET = route(async () => {
     low: flagged.filter((s) => s.key === 'low').length,
     exp: flagged.filter((s) => s.key === 'exp' || s.key === 'expired').length
   });
-}, { perms: ['inv', 'dash', 'pur', 'price'] });
+});

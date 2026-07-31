@@ -1,0 +1,15 @@
+# Vercel builds from source on its own machines, so nothing generated locally needs
+# uploading. Without this the CLI pushes the whole local .next directory (~96 MB),
+# which is slow enough to fail outright on a metered or VPN connection.
+.next
+node_modules
+out
+
+# Secrets belong in Project Settings -> Environment Variables, never in the bundle.
+.env
+.env.*
+
+# Local-only tooling and scratch files.
+.claude
+*.log
+*.tgz

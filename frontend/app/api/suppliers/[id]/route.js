@@ -23,7 +23,7 @@ export const PUT = route(async (request, { params, user }) => {
   await s.save();
   await logAct(user.name, `معلومات تهیه‌کننده «${s.name}» را تغییر داد`);
   return ok(s);
-}, { perms: ['pur'] });
+});
 
 export const DELETE = route(async (request, { params, user }) => {
   const s = await Supplier.findById(params.id);
@@ -36,4 +36,4 @@ export const DELETE = route(async (request, { params, user }) => {
   await s.deleteOne();
   await logAct(user.name, `تهیه‌کننده «${s.name}» را حذف کرد`);
   return ok({ ok: true });
-}, { perms: ['pur'] });
+});

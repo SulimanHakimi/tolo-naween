@@ -26,7 +26,7 @@ export const SUBTITLES = {
 // Name and address are stored in the database and edited under امنیت و بک‌اپ; these
 // are only the fallbacks used before the settings load.
 export const DEFAULT_STORE = {
-  storeName: 'طلوع ناوین',
+  storeName: 'طلوع نوین',
   storeAddress: '',
   storePhone: '',
   storeLicense: ''
@@ -42,10 +42,6 @@ export const PAYMENTS = ['نقد', 'کارت', 'موبایل', 'قرض'];
 
 export const EMP_STATUS = ['فعال', 'رخصت', 'خارج شده'];
 
-// The four roles created by `npm run init`, and what each one may reach.
-export const ROLE_PRESETS = {
-  'مدیر': ['dash', 'pos', 'inv', 'pur', 'cust', 'rep', 'emp', 'price', 'sec'],
-  'صندوق‌دار': ['dash', 'pos', 'cust', 'rep'],
-  'فروشنده': ['pos'],
-  'گدام‌دار': ['inv', 'pur']
-};
+// Job titles offered on the account form. They are labels only — every account
+// reaches every screen regardless of which one is picked.
+export const JOB_TITLES = ['مدیر', 'مدیر عمومی', 'صندوق‌دار', 'فروشنده', 'گدام‌دار', 'حسابدار'];

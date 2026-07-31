@@ -20,4 +20,4 @@ export const POST = route(async (request, { params, user }) => {
   await Transaction.create({ type: 'درآمد', tag: 'credit', desc: `پرداخت قرض — ${c.name}`, amount: value });
   await logAct(user.name, `${Math.round(value).toLocaleString('en-US')} قرض از «${c.name}» گرفت`);
   return ok(c);
-}, { perms: ['cust'] });
+});

@@ -22,14 +22,14 @@ function matches(rule, product) {
 }
 
 // Wholesale-aware unit price, before any discount rule.
-export function basePrice(product, qty, settings) {
+function basePrice(product, qty, settings) {
   const min = settings?.wholesaleMinQty ?? 50;
   const wholesale = +product.wholesale || 0;
   return wholesale > 0 && qty >= min ? wholesale : +product.retail;
 }
 
 /** The best matching rule for one line, as a per-unit reduction. */
-export function bestRule(product, qty, settings, rules) {
+function bestRule(product, qty, settings, rules) {
   const base = basePrice(product, qty, settings);
   let best = null;
 

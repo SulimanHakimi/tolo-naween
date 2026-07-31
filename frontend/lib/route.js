@@ -17,7 +17,7 @@ export function signToken(user) {
 }
 
 export function publicUser(u) {
-  return { id: u._id, name: u.name, role: u.role, initials: u.initials, username: u.username, perms: u.perms };
+  return { id: u._id, name: u.name, role: u.role, initials: u.initials, username: u.username };
 }
 
 async function authenticate(request) {
@@ -34,12 +34,11 @@ async function authenticate(request) {
 }
 
 /**
- * Wraps a route handler with the database connection, authentication and the
- * permission check. `perms` grants access when the account holds ANY of them;
- * omit it for a route every signed-in account may reach. Pass `public: true`
- * for the sign-in route.
+ * Wraps a route handler with the database connection and authentication. Every
+ * signed-in account reaches everything, so being signed in is the whole check.
+ * Pass `public: true` for the sign-in and setup routes.
  */
-export function route(handler, { perms, public: isPublic } = {}) {
+export function route(handler, { public: isPublic } = {}) {
   return async (request, ctx = {}) => {
     try {
       await connectDB();
@@ -48,9 +47,6 @@ export function route(handler, { perms, public: isPublic } = {}) {
 
       const user = await authenticate(request);
       if (!user) return fail('ورود به سیستم لازم است', 401);
-      if (perms && !perms.some((p) => user.perms?.[p])) {
-        return fail('سطح دسترسی حساب شما این کار را اجازه نمی‌دهد', 403);
-      }
 
       const params = ctx.params ? await ctx.params : {};
       return await handler(request, { ...ctx, params, user });

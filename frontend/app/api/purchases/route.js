@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
 export const GET = route(async (request) => {
   const limit = Math.min(+new URL(request.url).searchParams.get('limit') || 100, 300);
   return ok(await Purchase.find().sort({ date: -1 }).limit(limit));
-}, { perms: ['pur'] });
+});
 
 /**
  * Raise a purchase order. Nothing reaches stock here — an order is a promise, not a
@@ -40,4 +40,4 @@ export const POST = route(async (request, { user }) => {
 
   await logAct(user.name, `سفارش خرید ${po.po} را برای «${sup.name}» ثبت کرد`);
   return ok(po, 201);
-}, { perms: ['pur'] });
+});

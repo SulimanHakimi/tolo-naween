@@ -1,4 +1,4 @@
-# طلوع ناوین — سیستم مدیریت سوپرمارکت
+# طلوع نوین — سیستم مدیریت سوپرمارکت
 
 Supermarket management system: point of sale with printed bills and barcode scanning,
 stock with buy / retail / wholesale prices, suppliers and purchase orders, customer
@@ -14,32 +14,52 @@ Same stack as Hakimi Pharmacy, built as its own project — nothing in that fold
 
 ## Screens
 
-| Screen | Permission | What it does |
-|---|---|---|
-| داشبورد | `dash` | Today's sales, bills, profit, stock alerts, week chart, top sellers |
-| صندوق فروش | `pos` | Barcode scan, product grid, cart, four payment types, printed bill |
-| موجودی و گدام | `inv` | Products with unit, barcode, prices, stock, expiry; add / edit / delete |
-| خرید و تهیه‌کنندگان | `pur` | Suppliers, payables, multi-line purchase orders, receiving |
-| مشتریان و قرض‌ها | `cust` | Customers, credit balances, settlements, purchase history |
-| راپورها | `rep` | Daily / weekly / monthly figures, P&L, movers, cash book, returns, printing |
-| قیمت‌ها و تخفیفات | `price` | Retail/wholesale pricing, margins, discount rules |
-| کارمندان | `emp` | Staff, job titles, salaries, salary payments |
-| امنیت و بک‌اپ | `sec` | Backups, login accounts and permissions, settings, activity log |
+| Screen | What it does |
+|---|---|
+| داشبورد | Today's sales, bills, profit, stock alerts, week chart, top sellers |
+| صندوق فروش | Barcode scan, product grid, cart, four payment types, printed bill |
+| موجودی و گدام | Products with unit, barcode, prices, stock, expiry; add / edit / delete |
+| خرید و تهیه‌کنندگان | Suppliers, payables, multi-line purchase orders, receiving |
+| مشتریان و قرض‌ها | Customers, credit balances, settlements, purchase history |
+| راپورها | Daily / weekly / monthly figures, P&L, movers, cash book, returns, printing |
+| قیمت‌ها و تخفیفات | Retail/wholesale pricing, margins, discount rules |
+| کارمندان | Staff, job titles, salaries, salary payments |
+| امنیت و بک‌اپ | Backups, login accounts, settings, activity log |
 
-Permissions are enforced in two places: the sidebar only shows pages the account may
-open, and every API route checks the same permission. A salesperson who types
-`/reports` into the address bar is redirected, and the underlying request returns 403.
+## Accounts
+
+There is **one kind of account and it reaches every screen**. There are no permission
+tiers to configure and nothing to lock: being signed in is the whole check, on the
+sidebar and in every API route alike.
+
+An account carries a job title (`مدیر`, `صندوق‌دار`, `فروشنده`, …) which prints under the
+name in the sidebar. It is a label only — renaming somebody does not take anything away
+from them.
+
+Two things are still tracked per person, because they are useful rather than restrictive:
+
+- **Deactivating** an account blocks sign-in immediately, even on a token issued earlier.
+  The last active account cannot be deactivated or deleted — there would be nobody left
+  who could undo it.
+- **The activity log** records who did what, so a shared system still shows which person
+  changed a price, took a return, or received an order.
+
+Add further staff from **امنیت و بک‌اپ → حساب جدید**. A manager can reset anyone's
+password there without knowing the old one; each person can change their own from the
+same screen.
 
 ## First run
 
-**1. `frontend/.env.local` is already pointed at your Atlas cluster.** Set a password
-for at least the manager account (the other three are optional):
+**1. `frontend/.env.local` is already pointed at your Atlas cluster.** Choose a password
+for the first account:
 
 ```
-MANAGER_PASSWORD=<choose one, min 8 characters>
+ADMIN_PASSWORD=<choose one, min 8 characters>
 ```
 
-**2. Create the accounts** (safe to re-run; existing accounts are left alone):
+`ADMIN_NAME`, `ADMIN_ROLE` and `ADMIN_USERNAME` sit beside it and are pre-filled.
+
+**2. Create the account** (safe to re-run; an existing account is left alone):
 
 ```bash
 cd frontend && npm install && npm run init
@@ -51,16 +71,7 @@ cd frontend && npm install && npm run init
 cd frontend && npm run dev
 ```
 
-Blank the `*_PASSWORD` lines once the accounts exist — they are only read by `npm run init`.
-
-Four roles ship with sensible defaults, all editable per-account from **امنیت و بک‌اپ**:
-
-| Role | Reaches |
-|---|---|
-| مدیر | everything |
-| صندوق‌دار | dashboard, till, customers, reports |
-| فروشنده | till only |
-| گدام‌دار | stock and purchasing |
+Blank `ADMIN_PASSWORD` once the account exists — it is only read by `npm run init`.
 
 If nobody can sign in:
 
@@ -154,41 +165,48 @@ copies off the machine; a backup on the same disk does not survive that disk fai
 - **Rotate the Atlas password.** It was shared in plain text, so treat it as public:
   Atlas → Database Access → Edit → Edit Password, then update `.env.local`.
 - Every staff member should change their own password from **امنیت و بک‌اپ** after first
-  sign-in.
+  sign-in. Since every account has full access, a shared password is a real risk — give
+  each person their own.
 - Serve over HTTPS. Tokens are held in `localStorage` and last 12 hours.
 - Deleting `SETUP_TOKEN` from the environment disables `POST /api/setup` entirely.
 
 ## API
 
-All routes are under `/api` and need `Authorization: Bearer <token>` except
-`POST /api/auth/login` and `/api/setup`.
+All routes are under `/api` and need `Authorization: Bearer <token>`, except
+`POST /api/auth/login` and `/api/setup` which are public. Being signed in is the only
+check — there are no per-route permissions.
 
-| Method | Path | Permission |
+| Method | Path | Notes |
 |---|---|---|
-| POST | `/auth/login` | public |
-| GET | `/auth/me` | any signed-in account |
-| POST | `/auth/logout`, `/auth/change-password` | any signed-in account |
-| GET | `/search` | any signed-in account (results filtered by role) |
-| GET | `/products`, `/suppliers`, `/discounts`, `/settings` | any signed-in account |
-| POST, PUT, DELETE | `/products` | `inv` (`price` may also PUT prices) |
-| GET | `/products/alerts` | `inv`, `dash`, `pur` or `price` |
-| POST, PUT, DELETE | `/suppliers` | `pur` |
-| POST | `/suppliers/:id/pay` | `pur` |
-| GET, POST, DELETE | `/purchases` | `pur` |
-| POST | `/purchases/:id/receive` | `pur` |
-| GET | `/customers` | `cust` or `rep` |
-| POST, PUT, DELETE | `/customers` | `cust` |
-| POST | `/customers/:id/settle` | `cust` |
-| GET | `/sales` | `rep`, `dash`, `pos` or `cust` |
-| POST | `/sales` | `pos` |
-| POST | `/sales/:id/return` | `pos` or `rep` |
-| GET | `/returns` | `rep` or `pos` |
-| POST, PUT, DELETE | `/discounts` | `price` |
-| GET, POST, PUT, DELETE | `/employees` | `emp` |
-| POST | `/employees/:id/pay` | `emp` |
-| GET, POST | `/transactions` | `rep` |
-| GET | `/dashboard` | `dash` |
-| GET | `/reports`, `/reports/print` | `rep` |
-| GET, POST, PUT, DELETE | `/users` | `sec` |
-| GET | `/logs` | `sec` |
-| PUT | `/settings`, POST `/settings/backup` | `sec` |
+| POST | `/auth/login` | public; returns a 12-hour token |
+| POST | `/auth/logout`, `/auth/change-password` | own account |
+| GET | `/search?q=` | products, customers, bills and suppliers in one call |
+| GET, POST | `/products` | POST validates prices against the buy price |
+| PUT, DELETE | `/products/:id` | DELETE refuses while stock remains |
+| GET | `/products/alerts` | counts behind the sidebar badge |
+| GET, POST | `/suppliers` | |
+| PUT, DELETE | `/suppliers/:id` | rename cascades to products and orders |
+| POST | `/suppliers/:id/pay` | books a `stock`-tagged expense |
+| GET, POST | `/purchases` | POST only raises an order; stock is untouched |
+| POST | `/purchases/:id/receive` | adds stock, updates buy price, books or owes |
+| DELETE | `/purchases/:id` | only while still `در انتظار` |
+| GET, POST | `/customers` | POST accepts an opening قرض balance |
+| PUT, DELETE | `/customers/:id` | rename cascades to bills |
+| POST | `/customers/:id/settle` | full or partial repayment |
+| GET, POST | `/sales` | POST re-prices every line server-side |
+| POST | `/sales/:id/return` | checked against what is left on each line |
+| GET | `/returns` | |
+| GET, POST | `/discounts` | |
+| PUT, DELETE | `/discounts/:id` | PUT with only `active` toggles it |
+| GET, POST | `/employees` | |
+| PUT, DELETE | `/employees/:id` | |
+| POST | `/employees/:id/pay` | books a `salary`-tagged expense |
+| GET, POST | `/transactions` | cash book, receivables and payables |
+| GET | `/dashboard` | today's figures, alerts, week chart |
+| GET | `/reports`, `/reports/print` | `?period=daily\|weekly\|monthly` |
+| GET, POST | `/users` | |
+| PUT, DELETE | `/users/:id` | cannot strand the last active account |
+| GET | `/logs` | activity log |
+| GET, PUT | `/settings` | |
+| POST | `/settings/backup` | returns the JSON dump to download |
+| GET, POST | `/setup` | public, gated on `SETUP_TOKEN` |

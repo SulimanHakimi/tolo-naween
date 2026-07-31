@@ -135,9 +135,7 @@ export default function InventoryPage() {
             <b>{counts.attention} قلم جنس</b> نیاز به توجه دارند — {counts.low} قلم کم شده، {counts.out} قلم
             تمام شده، و {counts.exp} قلم نزدیک به تاریخ انقضا.
           </div>
-          {user?.perms?.pur && (
-            <button onClick={() => router.push('/purchasing')} className="btn btn-warn btn-sm">ثبت سفارش خرید</button>
-          )}
+          <button onClick={() => router.push('/purchasing')} className="btn btn-warn btn-sm">ثبت سفارش خرید</button>
         </div>
       )}
 

@@ -4,19 +4,17 @@ import mongoose from 'mongoose';
 // registered through mongoose.models first to avoid OverwriteModelError.
 const model = (name, schema) => mongoose.models[name] || mongoose.model(name, schema);
 
-// The nine screens. Every sidebar entry and every API route is gated on one of these.
-export const PERM_KEYS = ['dash', 'pos', 'inv', 'pur', 'cust', 'rep', 'emp', 'price', 'sec'];
-
-const permFields = Object.fromEntries(PERM_KEYS.map((k) => [k, { type: Boolean, default: false }]));
-
+// There is one kind of account and it reaches every screen. `role` is a job title
+// printed under the name in the sidebar — it carries no access meaning, so renaming
+// somebody to «فروشنده» does not take anything away from them.
 const userSchema = new mongoose.Schema({
   name: { type: String, required: true },
-  role: { type: String, required: true },            // مدیر | فروشنده | صندوق‌دار | گدام‌دار
+  role: { type: String, required: true, default: 'مدیر' },
   initials: String,
   username: { type: String, required: true, unique: true, lowercase: true, trim: true },
   passwordHash: { type: String, required: true },
-  active: { type: Boolean, default: true },
-  perms: permFields
+  // The one real gate: a deactivated account cannot sign in.
+  active: { type: Boolean, default: true }
 }, { timestamps: true });
 
 const productSchema = new mongoose.Schema({
@@ -173,7 +171,7 @@ const settingSchema = new mongoose.Schema({
   autoBackup: { type: Boolean, default: true },
   lastBackup: Date,
   // Printed on every bill and report; edited under امنیت و بک‌اپ.
-  storeName: { type: String, default: 'طلوع ناوین' },
+  storeName: { type: String, default: 'طلوع نوین' },
   storeAddress: { type: String, default: '' },
   storePhone: { type: String, default: '' },
   storeLicense: { type: String, default: '' }
