@@ -1,0 +1,51 @@
+// Sidebar and page titles, keyed by permission.
+export const LABELS = {
+  dash: 'داشبورد',
+  pos: 'صندوق فروش',
+  inv: 'موجودی و گدام',
+  pur: 'خرید و تهیه‌کنندگان',
+  cust: 'مشتریان و قرض‌ها',
+  rep: 'راپورها',
+  price: 'قیمت‌ها و تخفیفات',
+  emp: 'کارمندان',
+  sec: 'امنیت و بک‌اپ'
+};
+
+export const SUBTITLES = {
+  dash: 'خلاصهٔ فعالیت‌های امروز سوپرمارکت',
+  pos: 'فروش سریع با اسکن بارکد و چاپ بل',
+  inv: 'ثبت اجناس، پیگیری موجودی و تاریخ انقضا',
+  pur: 'سفارشات خرید و قرضداری‌ها',
+  cust: 'ثبت قرض مشتریان و تاریخچهٔ خرید',
+  rep: 'راپور فروش، مفاد و ضرر، اجناس پرفروش',
+  price: 'قیمت‌گذاری پرچون/عمده و تخفیف‌های موسمی',
+  emp: 'سطح دسترسی و محاسبهٔ معاش',
+  sec: 'ثبت فعالیت‌ها و بک‌اپ معلومات'
+};
+
+// Name and address are stored in the database and edited under امنیت و بک‌اپ; these
+// are only the fallbacks used before the settings load.
+export const DEFAULT_STORE = {
+  storeName: 'طلوع ناوین',
+  storeAddress: '',
+  storePhone: '',
+  storeLicense: ''
+};
+
+// Starting points only — both lists are free text on the product form.
+export const CATEGORIES = ['مواد خوراکی', 'نوشیدنی', 'لبنیات', 'لوازم خانه',
+  'شوینده و صحی', 'خوراکهٔ اطفال', 'تنقلات', 'قرطاسیه', 'متفرقه'];
+
+export const UNITS = ['دانه', 'کیلو', 'گرام', 'قطی', 'بسته', 'بوتل', 'بوجی', 'تخته', 'کارتن', 'لیتر', 'متر'];
+
+export const PAYMENTS = ['نقد', 'کارت', 'موبایل', 'قرض'];
+
+export const EMP_STATUS = ['فعال', 'رخصت', 'خارج شده'];
+
+// The four roles created by `npm run init`, and what each one may reach.
+export const ROLE_PRESETS = {
+  'مدیر': ['dash', 'pos', 'inv', 'pur', 'cust', 'rep', 'emp', 'price', 'sec'],
+  'صندوق‌دار': ['dash', 'pos', 'cust', 'rep'],
+  'فروشنده': ['pos'],
+  'گدام‌دار': ['inv', 'pur']
+};
