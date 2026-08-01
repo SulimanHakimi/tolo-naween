@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { SHOP_PURSE } from '../labels';
 
 // Hot reload and warm serverless containers re-run this module, so every model is
 // registered through mongoose.models first to avoid OverwriteModelError.
@@ -128,13 +129,81 @@ const discountSchema = new mongoose.Schema({
   active: { type: Boolean, default: true }
 }, { timestamps: true });
 
+// ---------- Topup ----------
+
+// The shop takes credit from one company and tops up any number on any network out
+// of that single pool, so there is one account rather than one per network — the same
+// shape as Setting, a single row keyed 'global'.
+//
+// `balance` is credit in hand at face value; `owed` is what the shop still has to pay
+// the company for credit taken on account. The commission is what the shop keeps per
+// 1000 sold — 20 by default.
+const topupAccountSchema = new mongoose.Schema({
+  key: { type: String, unique: true, default: 'global' },
+  provider: { type: String, default: 'شرکت اعتبار' },     // whoever the credit comes from
+  phone: { type: String, default: '' },                   // their contact number
+  commissionPer1000: { type: Number, default: 20 },
+  balance: { type: Number, default: 0 },
+  owed: { type: Number, default: 0 }
+}, { timestamps: true });
+
+// Credit coming in from the company. `credit` is the face value received, `cost` is
+// what the shop pays for it — usually less, and that gap is where the commission
+// actually comes from.
+const topupLoadSchema = new mongoose.Schema({
+  no: { type: String, required: true, unique: true },
+  date: { type: Date, default: Date.now },
+  provider: { type: String, default: '' },                // the name as it stood that day
+  credit: { type: Number, required: true },
+  cost: { type: Number, required: true },
+  paid: { type: Boolean, default: true },                 // false adds to `owed` instead
+  createdBy: String
+}, { timestamps: true });
+
+// One topup sent to a number. The customer hands over the face value; the shop keeps
+// `commission`, frozen here at the rate on the day of sale.
+const topupSchema = new mongoose.Schema({
+  no: { type: String, required: true, unique: true },
+  date: { type: Date, default: Date.now },
+  phone: { type: String, required: true },                // the number that was topped up
+  amount: { type: Number, required: true },               // face value paid by the customer
+  rate: { type: Number, default: 20 },                    // per 1000, as it stood that day
+  commission: { type: Number, default: 0 },
+  customer: { type: String, default: 'مشتری نقدی' },
+  payment: { type: String, enum: ['نقد', 'قرض'], default: 'نقد' },
+  servedBy: String
+}, { timestamps: true });
+
+// ---------- Shop expenses ----------
+
+// Anything the shop spends that is not stock: rent, power, wages, a staff member
+// buying cleaning goods out of pocket. `paidBy` names that person until they are
+// paid back; `tx` is the cash-book entry, kept so both disappear together.
+const expenseSchema = new mongoose.Schema({
+  no: { type: String, required: true, unique: true },
+  date: { type: Date, default: Date.now },
+  category: { type: String, required: true },
+  desc: { type: String, required: true },
+  amount: { type: Number, required: true },
+  paidBy: { type: String, default: SHOP_PURSE },
+  reimbursed: { type: Boolean, default: false },
+  note: { type: String, default: '' },
+  tx: mongoose.Schema.Types.ObjectId,
+  createdBy: String
+}, { timestamps: true });
+
 const transactionSchema = new mongoose.Schema({
   t: { type: Date, default: Date.now },
   type: { type: String, enum: ['درآمد', 'مصرف'], required: true },
   desc: { type: String, required: true },
   // Purchases and supplier payments are already inside cost of goods sold, so the
-  // profit and loss report excludes any entry tagged 'stock'.
-  tag: { type: String, enum: ['sale', 'credit', 'stock', 'salary', 'return', 'other'], default: 'other' },
+  // profit and loss report excludes any entry tagged 'stock'. 'topup' is excluded for
+  // the same reason: airtime profit is reported from the commission on each sale.
+  tag: {
+    type: String,
+    enum: ['sale', 'credit', 'stock', 'salary', 'return', 'topup', 'expense', 'other'],
+    default: 'other'
+  },
   amount: { type: Number, required: true }
 }, { timestamps: true });
 
@@ -174,16 +243,30 @@ export const Sale = model('Sale', saleSchema);
 export const Return = model('Return', returnSchema);
 export const Purchase = model('Purchase', purchaseSchema);
 export const Discount = model('Discount', discountSchema);
+export const TopupAccount = model('TopupAccount', topupAccountSchema);
+export const TopupLoad = model('TopupLoad', topupLoadSchema);
+export const Topup = model('Topup', topupSchema);
+export const Expense = model('Expense', expenseSchema);
 export const Transaction = model('Transaction', transactionSchema);
 export const ActivityLog = model('ActivityLog', activityLogSchema);
 export const Counter = model('Counter', counterSchema);
 export const Setting = model('Setting', settingSchema);
 
 export const COLLECTIONS = ['User', 'Product', 'Supplier', 'Customer', 'Sale', 'Return',
-  'Purchase', 'Discount', 'Transaction', 'ActivityLog', 'Counter', 'Setting'];
+  'Purchase', 'Discount', 'TopupAccount', 'TopupLoad', 'Topup', 'Expense',
+  'Transaction', 'ActivityLog', 'Counter', 'Setting'];
+
+// `sale`, `po` and `return` are seeded at 1000 by `npm run init`. Counters added after
+// that script first ran would otherwise start from 1 on an existing database, so their
+// starting point lives here instead — the first topup still reads TP-1001.
+const SEQ_BASE = { topup: 1000, load: 1000, expense: 1000 };
 
 export async function nextSeq(key) {
   const doc = await Counter.findOneAndUpdate({ key }, { $inc: { seq: 1 } }, { new: true, upsert: true });
+  if (doc.seq === 1 && SEQ_BASE[key]) {
+    doc.seq = SEQ_BASE[key] + 1;
+    await doc.save();
+  }
   return doc.seq;
 }
 
@@ -191,6 +274,13 @@ export async function getSettings() {
   let s = await Setting.findOne({ key: 'global' });
   if (!s) s = await Setting.create({ key: 'global' });
   return s;
+}
+
+/** The one airtime account, created on first use with the default 20 per 1000. */
+export async function getTopupAccount() {
+  let a = await TopupAccount.findOne({ key: 'global' });
+  if (!a) a = await TopupAccount.create({ key: 'global' });
+  return a;
 }
 
 export async function logAct(user, action) {

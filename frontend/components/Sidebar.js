@@ -7,8 +7,9 @@ import { ago } from '@/lib/format';
 import Icon, { ICON } from './icons';
 
 const NAV_ICON = {
-  dash: ICON.grid, pos: ICON.pos, inv: ICON.box, pur: ICON.truck, cust: ICON.users,
-  rep: ICON.chart, price: ICON.tag, sec: ICON.shield
+  dash: ICON.grid, pos: ICON.pos, bills: ICON.receipt, top: ICON.signal, inv: ICON.box,
+  pur: ICON.truck, cust: ICON.users, exp: ICON.wallet, rep: ICON.chart,
+  price: ICON.tag, sec: ICON.shield
 };
 
 /**

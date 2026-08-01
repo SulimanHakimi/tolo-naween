@@ -5,15 +5,74 @@ import { PAYMENTS } from '@/lib/labels';
 
 export const dynamic = 'force-dynamic';
 
+// Escaped so a bill number containing '.' or '*' cannot turn into a wildcard scan.
+const rx = (q) => new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+
+/**
+ * The bill list, filtered and paged. `sum` and `profit` cover the whole filtered set
+ * rather than the page on screen, so narrowing the filter answers "what did this
+ * customer / this week / credit sales actually bring in" — the page number never
+ * changes those figures.
+ */
 export const GET = route(async (request) => {
   const p = new URL(request.url).searchParams;
   const limit = Math.min(+p.get('limit') || 200, 500);
+  const page = Math.max(+p.get('page') || 1, 1);
 
   const filter = {};
-  if (p.get('since')) filter.date = { $gte: new Date(p.get('since')) };
   if (p.get('customer')) filter.customer = p.get('customer');
+  if (PAYMENTS.includes(p.get('payment'))) filter.payment = p.get('payment');
 
-  return ok(await Sale.find(filter).sort({ date: -1 }).limit(limit));
+  // `from` and `to` are ISO 'YYYY-MM-DD'; `to` covers the whole of that day.
+  const since = p.get('since') || p.get('from');
+  const until = p.get('to');
+  if (since || until) {
+    filter.date = {};
+    if (since) filter.date.$gte = new Date(since);
+    if (until) filter.date.$lt = new Date(new Date(until).getTime() + 864e5);
+  }
+
+  const q = (p.get('q') || '').trim();
+  if (q.length) {
+    const re = rx(q);
+    filter.$or = [{ no: re }, { customer: re }, { phone: re }, { servedBy: re }];
+  }
+
+  // The same maths as saleTotals, run in the database so the totals can cover every
+  // matching bill without loading them all.
+  const reduceItems = (expr) => ({
+    $reduce: { input: '$items', initialValue: 0, in: { $add: ['$$value', expr] } }
+  });
+
+  const [sales, total, agg] = await Promise.all([
+    Sale.find(filter).sort({ date: -1 }).skip((page - 1) * limit).limit(limit),
+    Sale.countDocuments(filter),
+    Sale.aggregate([
+      { $match: filter },
+      {
+        $project: {
+          total: 1,
+          margin: reduceItems({ $multiply: [{ $subtract: ['$$this.price', '$$this.buy'] }, '$$this.qty'] }),
+          given: { $add: [{ $ifNull: ['$autoDisc', 0] }, { $ifNull: ['$disc', 0] }] },
+          units: reduceItems('$$this.qty')
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          sum: { $sum: '$total' },
+          profit: { $sum: { $subtract: ['$margin', '$given'] } },
+          units: { $sum: '$units' }
+        }
+      }
+    ])
+  ]);
+
+  const t = agg[0] || { sum: 0, profit: 0, units: 0 };
+  return ok({
+    sales, total, page, pages: Math.max(1, Math.ceil(total / limit)),
+    sum: t.sum, profit: t.profit, units: t.units
+  });
 });
 
 /**

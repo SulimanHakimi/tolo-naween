@@ -67,6 +67,43 @@ export default function DashboardPage() {
         ))}
       </div>
 
+      <div className="grid-3 gap-b">
+        <div className="card">
+          <div className="row-between">
+            <div>
+              <div className="stat-label">تاپ‌آپ امروز</div>
+              <div className="stat-value" style={{ color: C.text }}>{fmt(d.topupAmount)}</div>
+              <div className="stat-sub" style={{ color: C.green }}>
+                کمیشن {fmt(d.topupProfit)} از {num(d.topupCount)} تاپ‌آپ
+              </div>
+            </div>
+            <div className="kpi-icon" style={{ background: C.blueSoft }}>
+              <Icon d={ICON.signal} size={21} stroke={C.brand} />
+            </div>
+          </div>
+        </div>
+
+        <div className="card" onClick={() => router.push('/topup')} style={{ cursor: 'pointer' }}>
+          <div className="stat-label">اعتبار موجود تاپ‌آپ</div>
+          <div className="stat-value" style={{ color: d.creditLeft ? C.brand : C.redBright }}>{fmt(d.creditLeft)}</div>
+          <div className="stat-sub ellipsis" style={{ color: d.creditLeft ? C.muted : C.red }}>
+            {d.creditLeft
+              ? `از ${d.creditProvider}${d.creditOwed ? ` · قرضدار ${fmt(d.creditOwed)}` : ''}`
+              : 'اعتبار تمام شده — از شرکت بگیرید'}
+          </div>
+        </div>
+
+        <div className="card" onClick={() => router.push('/expenses')} style={{ cursor: 'pointer' }}>
+          <div className="stat-label">مصارف امروز</div>
+          <div className="stat-value" style={{ color: d.expenses ? C.amber : C.green }}>{fmt(d.expenses)}</div>
+          <div className="stat-sub ellipsis" style={{ color: C.muted }}>
+            {d.expenseCount
+              ? d.recentExpenses.map((e) => e.desc).join('، ')
+              : 'امروز مصرفی ثبت نشده'}
+          </div>
+        </div>
+      </div>
+
       <div className="grid-wide-side gap-b">
         <div className="card">
           <div className="row-between" style={{ marginBottom: 22 }}>
@@ -128,7 +165,7 @@ export default function DashboardPage() {
         <div className="card">
           <div className="row-between" style={{ marginBottom: 8 }}>
             <div className="card-title">آخرین فروشات امروز</div>
-            <a onClick={() => router.push('/reports')} style={{ cursor: 'pointer', fontSize: 12.5 }}>همه راپورها</a>
+            <a onClick={() => router.push('/bills')} style={{ cursor: 'pointer', fontSize: 12.5 }}>همه بل‌ها</a>
           </div>
 
           {d.recent.length === 0 ? (

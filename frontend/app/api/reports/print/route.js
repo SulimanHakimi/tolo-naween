@@ -1,6 +1,6 @@
 import { route, ok } from '@/lib/route';
-import { Product, Transaction, getSettings } from '@/lib/models';
-import { periodData, movers, RANGE_LABEL, RANGE_TITLE } from '@/lib/reports';
+import { Product, Transaction, Expense, getSettings } from '@/lib/models';
+import { periodData, movers, byCategory, RANGE_LABEL, RANGE_TITLE, EXCLUDED_TAGS } from '@/lib/reports';
 import { stockStatus } from '@/lib/ui';
 import { daysTo, jLong } from '@/lib/format';
 
@@ -36,10 +36,11 @@ export const GET = route(async (request) => {
   }
 
   const pd = await periodData(period);
-  const expenses = await Transaction.find({ type: 'مصرف', t: { $gte: pd.window.curFrom, $lt: pd.window.curTo } });
-  const other = expenses.filter((e) => !['stock', 'return'].includes(e.tag)).reduce((t, e) => t + e.amount, 0);
+  const window = { $gte: pd.window.curFrom, $lt: pd.window.curTo };
+  const expenses = await Transaction.find({ type: 'مصرف', t: window });
+  const other = expenses.filter((e) => !EXCLUDED_TAGS.includes(e.tag)).reduce((t, e) => t + e.amount, 0);
   const discounts = pd.sales.reduce((t, s) => t + (s.autoDisc || 0) + (s.disc || 0), 0);
-  const netProfit = pd.cur.profit - pd.returns.profitLoss - other;
+  const netProfit = pd.cur.profit - pd.returns.profitLoss - other + pd.topup.commission;
 
   if (type === 'pl') {
     return ok({
@@ -48,7 +49,11 @@ export const GET = route(async (request) => {
       cogs: pd.cur.rev - pd.cur.profit,
       grossProfit: pd.cur.profit,
       discounts, returnLoss: pd.returns.profitLoss,
-      otherExpenses: other, netProfit
+      otherExpenses: other,
+      topupAmount: pd.topup.amount, topupCount: pd.topup.count,
+      topupProfit: pd.topup.commission,
+      expenseCats: byCategory(await Expense.find({ date: window })),
+      netProfit
     });
   }
 

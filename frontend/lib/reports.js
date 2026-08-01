@@ -1,4 +1,4 @@
-import { Sale, Return, Product } from './models';
+import { Sale, Return, Product, Topup } from './models';
 import { JDAYS } from './jalali';
 
 const DAY = 864e5;
@@ -48,6 +48,34 @@ export function returnTotals(returns) {
       count: a.count + 1
     };
   }, { refunded: 0, profitLoss: 0, units: 0, count: 0 });
+}
+
+/**
+ * What airtime sales brought in. `amount` is the money that passed through — the
+ * customer's face value, most of which belongs to the telecom company. `commission`
+ * is the only part the shop keeps, so that is what reaches the profit line.
+ */
+export function topupTotals(topups) {
+  return topups.reduce((a, t) => ({
+    count: a.count + 1,
+    amount: a.amount + t.amount,
+    commission: a.commission + (t.commission || 0),
+    credit: a.credit + (t.payment === 'قرض' ? t.amount : 0)
+  }), { count: 0, amount: 0, commission: 0, credit: 0 });
+}
+
+export function expenseTotals(expenses) {
+  return expenses.reduce((a, e) => ({ count: a.count + 1, amount: a.amount + e.amount }),
+    { count: 0, amount: 0 });
+}
+
+/** Expenses grouped by their category, biggest first. */
+export function byCategory(expenses) {
+  const sums = {};
+  for (const e of expenses) sums[e.category] = (sums[e.category] || 0) + e.amount;
+  const total = Object.values(sums).reduce((t, v) => t + v, 0);
+  return Object.entries(sums).sort((a, b) => b[1] - a[1])
+    .map(([name, amount]) => ({ name, amount, pct: total ? Math.round(amount / total * 100) : 0 }));
 }
 
 /** The dashboard's seven bars: one per day of the current Dari week. */
@@ -143,20 +171,30 @@ export async function movers(sales) {
 /** Everything the reports screen needs for one period. */
 export async function periodData(period) {
   const w = windowFor(period);
-  const [cur, prev, curReturns, prevReturns] = await Promise.all([
+  const [cur, prev, curReturns, prevReturns, curTopups, prevTopups] = await Promise.all([
     Sale.find({ date: { $gte: w.curFrom, $lt: w.curTo } }),
     Sale.find({ date: { $gte: w.prevFrom, $lt: w.prevTo } }),
     Return.find({ date: { $gte: w.curFrom, $lt: w.curTo } }),
-    Return.find({ date: { $gte: w.prevFrom, $lt: w.prevTo } })
+    Return.find({ date: { $gte: w.prevFrom, $lt: w.prevTo } }),
+    Topup.find({ date: { $gte: w.curFrom, $lt: w.curTo } }),
+    Topup.find({ date: { $gte: w.prevFrom, $lt: w.prevTo } })
   ]);
 
   return {
     window: w,
     cur: saleTotals(cur), prev: saleTotals(prev),
     returns: returnTotals(curReturns), prevReturns: returnTotals(prevReturns),
+    topup: topupTotals(curTopups), prevTopup: topupTotals(prevTopups),
     sales: cur
   };
 }
 
-export const RANGE_LABEL = { daily: 'امروز', weekly: 'هفتهٔ گذشته (۷ روز)', monthly: 'ماه گذشته (۳۰ روز)' };
+/**
+ * Cash-book tags the profit and loss report leaves out of its expense line, because
+ * each is already accounted for elsewhere: stock inside cost of goods sold, returns
+ * inside returnTotals, and airtime inside the commission on each topup.
+ */
+export const EXCLUDED_TAGS = ['stock', 'return', 'topup'];
+
+export const RANGE_LABEL ={ daily: 'امروز', weekly: 'هفتهٔ گذشته (۷ روز)', monthly: 'ماه گذشته (۳۰ روز)' };
 export const RANGE_TITLE = { daily: 'راپور روزانه', weekly: 'راپور هفته‌وار', monthly: 'راپور ماهوار' };

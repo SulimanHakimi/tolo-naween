@@ -7,8 +7,14 @@ import { useApp } from '@/lib/store';
 import { makeFmt, jStamp } from '@/lib/format';
 import Icon, { ICON } from './icons';
 
-const KIND_LABEL = { product: 'جنس', customer: 'مشتری', sale: 'بل', supplier: 'تهیه‌کننده' };
-const KIND_PATH = { product: '/inventory', customer: '/customers', sale: '/reports', supplier: '/purchasing' };
+const KIND_LABEL = {
+  product: 'جنس', customer: 'مشتری', sale: 'بل', supplier: 'تهیه‌کننده',
+  topup: 'تاپ‌آپ', expense: 'مصرف'
+};
+const KIND_PATH = {
+  product: '/inventory', customer: '/customers', sale: '/bills', supplier: '/purchasing',
+  topup: '/topup', expense: '/expenses'
+};
 
 export default function Topbar({ title, sub, onMenu = () => {} }) {
   const { settings } = useApp();

@@ -7,11 +7,12 @@ import { LABELS, SUBTITLES, DEFAULT_STORE } from './labels';
 const AppContext = createContext(null);
 
 // Order also decides which page a role lands on after signing in.
-export const SCREEN_ORDER = ['dash', 'pos', 'inv', 'pur', 'cust', 'rep', 'price', 'sec'];
+export const SCREEN_ORDER = ['dash', 'pos', 'bills', 'top', 'inv', 'pur', 'cust', 'exp', 'rep', 'price', 'sec'];
 
 export const SCREEN_PATH = {
-  dash: '/dashboard', pos: '/pos', inv: '/inventory', pur: '/purchasing', cust: '/customers',
-  rep: '/reports', price: '/pricing', sec: '/security'
+  dash: '/dashboard', pos: '/pos', bills: '/bills', top: '/topup', inv: '/inventory',
+  pur: '/purchasing', cust: '/customers', exp: '/expenses', rep: '/reports',
+  price: '/pricing', sec: '/security'
 };
 
 export const screenKeyFor = (pathname) => Object.keys(SCREEN_PATH).find((k) => SCREEN_PATH[k] === pathname);

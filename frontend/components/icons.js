@@ -30,7 +30,9 @@ export const ICON = {
   menu: 'M3 6h18 M3 12h18 M3 18h18',
   close: 'M18 6 6 18 M6 6l12 12',
   wallet: 'M3 6h15a3 3 0 0 1 3 3v8a2 2 0 0 1-2 2H4a1 1 0 0 1-1-1z M17 13h.01',
-  download: 'M12 3v12 M7 11l5 5 5-5 M4 21h16'
+  download: 'M12 3v12 M7 11l5 5 5-5 M4 21h16',
+  signal: 'M4 20v-4 M9 20V11 M14 20V7 M19 20V3',
+  receipt: 'M5 21V3h14v18l-3-2-2 2-2-2-2 2-2-2z M9 8h6 M9 12h6'
 };
 
 /** 24×24 stroked glyph. `d` is one of the ICON entries. */

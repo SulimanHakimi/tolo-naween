@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { useApp } from '@/lib/store';
 import { useFocusTerm } from '@/lib/focus';
@@ -9,13 +10,15 @@ import { C } from '@/lib/ui';
 import Icon, { ICON } from '@/components/icons';
 import BillModal from '@/components/BillModal';
 import ReportModal from '@/components/ReportModal';
+import ReturnModal from '@/components/ReturnModal';
 
 const PERIODS = [['daily', 'روزانه'], ['weekly', 'هفته‌وار'], ['monthly', 'ماهوار']];
 const PRINTS = [['sales', 'راپور فروش'], ['pl', 'مفاد و ضرر'], ['stock', 'راپور گدام']];
 
 export default function ReportsPage() {
-  const { settings, user } = useApp();
+  const { settings } = useApp();
   const fmt = makeFmt(settings.currency);
+  const router = useRouter();
 
   const [period, setPeriod] = useState('daily');
   const [d, setD] = useState(null);
@@ -25,15 +28,14 @@ export default function ReportsPage() {
   const [bill, setBill] = useState(null);
   const [billSearch, setBillSearch] = useState('');
   const [printing, setPrinting] = useState(null);
-  const [returnFor, setReturnFor] = useState(null);   // { sale, qty: {name: n}, restock, reason }
+  const [returnFor, setReturnFor] = useState(null);   // the bill being returned against
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
-  const [busy, setBusy] = useState(false);
 
   const loadPeriod = (p) => api(`/reports?period=${p}`).then(setD).catch((e) => setError(e.message));
 
   const loadLists = () => Promise.all([api('/sales?limit=60'), api('/returns?limit=40'), api('/transactions')])
-    .then(([s, r, t]) => { setSales(s); setReturns(r); setCash(t); })
+    .then(([s, r, t]) => { setSales(s.sales); setReturns(r); setCash(t); })
     .catch((e) => setError(e.message));
 
   useFocusTerm(setBillSearch);
@@ -48,43 +50,11 @@ export default function ReportsPage() {
 
   const returnable = (s) => s.items.some((i) => i.qty - (i.returned || 0) > 0);
 
-  function openReturn(sale) {
-    setError('');
-    setReturnFor({
-      sale,
-      qty: Object.fromEntries(sale.items.map((i) => [i.name, ''])),
-      restock: true,
-      reason: ''
-    });
-  }
-
-  const returnTotal = useMemo(() => {
-    if (!returnFor) return 0;
-    return returnFor.sale.items.reduce((t, i) => {
-      const q = Math.floor(+returnFor.qty[i.name]) || 0;
-      return t + i.price * Math.min(q, i.qty - (i.returned || 0));
-    }, 0);
-  }, [returnFor]);
-
-  async function submitReturn() {
-    if (busy) return;
-    setBusy(true); setError('');
-    try {
-      const items = returnFor.sale.items
-        .map((i) => ({ name: i.name, qty: Math.floor(+returnFor.qty[i.name]) || 0 }))
-        .filter((i) => i.qty > 0);
-      if (!items.length) throw new Error('تعداد برگشتی را وارد کنید');
-
-      await api(`/sales/${returnFor.sale._id}/return`, {
-        method: 'POST',
-        body: { items, restock: returnFor.restock, reason: returnFor.reason }
-      });
-      setNotice('برگشتی ثبت شد.');
-      setReturnFor(null);
-      loadPeriod(period);
-      loadLists();
-    } catch (e) { setError(e.message); }
-    setBusy(false);
+  function afterReturn(message) {
+    setNotice(message);
+    setReturnFor(null);
+    loadPeriod(period);
+    loadLists();
   }
 
   if (error && !d) return <div className="banner banner-error">{error}</div>;
@@ -108,7 +78,8 @@ export default function ReportsPage() {
     { label: 'قیمت تمام‌شد اجناس', value: d.cogs, color: C.faint },
     { label: 'تخفیفات داده‌شده', value: d.discounts, color: C.amberBright },
     { label: 'ضرر برگشتی‌ها', value: d.returnLoss, color: C.redBright },
-    { label: 'مصارف', value: d.otherExpenses, color: C.amber },
+    { label: 'مصارف دکان', value: d.otherExpenses, color: C.amber },
+    { label: 'کمیشن تاپ‌آپ', value: d.topupProfit, color: C.brandLight },
     { label: 'مفاد خالص', value: d.netProfit, color: C.greenBright }
   ];
   const plMax = Math.max(...plRows.map((r) => Math.abs(r.value)), 1);
@@ -187,6 +158,25 @@ export default function ReportsPage() {
             <span>باید بگیریم: <b className="tnum" style={{ color: C.redBright }}>{fmt(d.receivable)}</b></span>
             <span>باید بدهیم: <b className="tnum" style={{ color: C.amber }}>{fmt(d.payable)}</b></span>
           </div>
+
+          {/* Airtime moves a lot of money that never belongs to the shop, so the face
+              value is shown apart from the commission that actually is profit. */}
+          <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px dashed var(--line)', fontSize: 12.5, color: C.muted, lineHeight: 2 }}>
+            <div className="row-between">
+              <span>تاپ‌آپ فروخته‌شده ({num(d.topupCount)} بار)</span>
+              <b className="tnum">{fmt(d.topupAmount)}</b>
+            </div>
+            <div className="row-between">
+              <span>اعتبار باقی‌مانده</span>
+              <b className="tnum" style={{ color: C.brand }}>{fmt(d.creditLeft)}</b>
+            </div>
+            {d.creditOwed > 0 && (
+              <div className="row-between">
+                <span>قرضداری بابت اعتبار</span>
+                <b className="tnum" style={{ color: C.redBright }}>{fmt(d.creditOwed)}</b>
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="stack">
@@ -225,6 +215,23 @@ export default function ReportsPage() {
             ))}
           </div>
 
+          {d.expenseCats.length > 0 && (
+            <div className="card">
+              <div className="card-title" style={{ marginBottom: 12 }}>مصارف بر اساس دسته</div>
+              <div className="stack" style={{ gap: 12 }}>
+                {d.expenseCats.map((c) => (
+                  <div key={c.name}>
+                    <div className="row-between" style={{ marginBottom: 5 }}>
+                      <span style={{ fontSize: 12.5 }}>{c.name}</span>
+                      <span className="tnum" style={{ fontSize: 12, color: C.muted }}>{fmt(c.amount)} · {c.pct}٪</span>
+                    </div>
+                    <div className="meter"><div style={{ width: `${c.pct}%`, background: C.amberBright }}></div></div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {d.cats.length > 0 && (
             <div className="card">
               <div className="card-title" style={{ marginBottom: 12 }}>فروش بر اساس دسته</div>
@@ -250,6 +257,7 @@ export default function ReportsPage() {
             <div className="card-title">بل‌های اخیر</div>
             <span className="card-note">برای چاپ روی بل کلیک کنید</span>
             <div className="spacer"></div>
+            <a onClick={() => router.push('/bills')} style={{ cursor: 'pointer', fontSize: 12.5 }}>همه بل‌ها</a>
             <div className="inline-search" style={{ width: 190 }}>
               <Icon d={ICON.search} size={16} stroke={C.faint} />
               <input value={billSearch} onChange={(e) => setBillSearch(e.target.value)} placeholder="شماره بل یا مشتری…" />
@@ -275,7 +283,7 @@ export default function ReportsPage() {
                       <td className="num semi">{fmt(s.total)}</td>
                       <td>
                         {returnable(s) && (
-                          <button onClick={() => openReturn(s)} className="btn btn-ghost btn-sm" title="برگشت جنس">
+                          <button onClick={() => setReturnFor(s)} className="btn btn-ghost btn-sm" title="برگشت جنس">
                             <Icon d={ICON.undo} size={14} stroke={C.muted} />برگشت
                           </button>
                         )}
@@ -349,70 +357,8 @@ export default function ReportsPage() {
 
       {bill && <BillModal sale={bill} onClose={() => setBill(null)} />}
       {printing && <ReportModal type={printing} period={period} onClose={() => setPrinting(null)} />}
-
       {returnFor && (
-        <div className="overlay">
-          <div className="modal modal-lg">
-            <h2>برگشت جنس — بل #{returnFor.sale.no}</h2>
-            <div className="modal-sub">
-              تعداد برگشتی هر قلم را وارد کنید. فقط تا آنچه در این بل فروخته شده قابل برگشت است.
-            </div>
-
-            <div className="form-grid">
-              {returnFor.sale.items.map((i) => {
-                const left = i.qty - (i.returned || 0);
-                return (
-                  <div key={i.name} className="row" style={{ gap: 10 }}>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div className="ellipsis semi" style={{ fontSize: 13 }}>{i.name}</div>
-                      <div className="tnum" style={{ fontSize: 11, color: C.faint }}>
-                        {fmt(i.price)} · فروخته {i.qty} {i.unit}
-                        {i.returned ? ` · قبلاً ${i.returned} برگشت شده` : ''}
-                      </div>
-                    </div>
-                    <input value={returnFor.qty[i.name]} disabled={left <= 0}
-                      onChange={(e) => setReturnFor((f) => ({ ...f, qty: { ...f.qty, [i.name]: e.target.value } }))}
-                      type="number" min="0" max={left} placeholder={left > 0 ? `تا ${left}` : 'برگشت شده'}
-                      className="field tnum" style={{ width: 110 }} />
-                  </div>
-                );
-              })}
-
-              <div>
-                <div className="field-label">دلیل برگشت</div>
-                <input value={returnFor.reason} onChange={(e) => setReturnFor((f) => ({ ...f, reason: e.target.value }))}
-                  placeholder="مثلاً: خراب بود، مشتری پسند نکرد" className="field" />
-              </div>
-
-              <div className="row" style={{ gap: 10, marginTop: 4 }}>
-                <button onClick={() => setReturnFor((f) => ({ ...f, restock: true }))}
-                  className={`btn btn-md ${returnFor.restock ? 'btn-primary' : 'btn-ghost'}`} style={{ flex: 1 }}>
-                  قابل فروش — به گدام برگردد
-                </button>
-                <button onClick={() => setReturnFor((f) => ({ ...f, restock: false }))}
-                  className={`btn btn-md ${!returnFor.restock ? 'btn-primary' : 'btn-ghost'}`} style={{ flex: 1 }}>
-                  خراب — ضرر ثبت شود
-                </button>
-              </div>
-
-              <div className="row-between" style={{ marginTop: 8, paddingTop: 12, borderTop: '1px dashed var(--line)' }}>
-                <span style={{ fontWeight: 700 }}>
-                  {returnFor.sale.payment === 'قرض' ? 'از قرض مشتری کم می‌شود' : 'مبلغ برگشتی به مشتری'}
-                </span>
-                <span className="tnum" style={{ fontSize: 19, fontWeight: 800, color: C.redBright }}>{fmt(returnTotal)}</span>
-              </div>
-
-              {error && <div className="banner banner-error">{error}</div>}
-            </div>
-
-            <div className="modal-actions">
-              <button onClick={() => setReturnFor(null)} className="btn btn-ghost">انصراف</button>
-              <button onClick={submitReturn} disabled={busy || returnTotal <= 0} className="btn btn-primary">
-                {busy ? 'در حال ثبت…' : 'ثبت برگشتی'}
-              </button>
-            </div>
-          </div>
-        </div>
+        <ReturnModal sale={returnFor} onClose={() => setReturnFor(null)} onDone={afterReturn} />
       )}
     </>
   );

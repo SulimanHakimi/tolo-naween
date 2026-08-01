@@ -1,6 +1,6 @@
 import { route, ok } from '@/lib/route';
-import { Sale, Product, Return, getSettings } from '@/lib/models';
-import { midnight, saleTotals, returnTotals, weekBars, movers } from '@/lib/reports';
+import { Sale, Product, Return, Topup, Expense, getSettings, getTopupAccount } from '@/lib/models';
+import { midnight, saleTotals, returnTotals, topupTotals, expenseTotals, weekBars, movers } from '@/lib/reports';
 import { stockStatus, needsAttention } from '@/lib/ui';
 import { daysTo } from '@/lib/format';
 
@@ -13,17 +13,25 @@ export const GET = route(async () => {
   const today = midnight(new Date());
   const yesterday = new Date(today.getTime() - DAY);
 
-  const [todaySales, yesterdaySales, products, todayReturns, bars] = await Promise.all([
+  const [todaySales, yesterdaySales, products, todayReturns, bars,
+    todayTopups, yesterdayTopups, account, todayExpenses] = await Promise.all([
     Sale.find({ date: { $gte: today } }).sort({ date: -1 }),
     Sale.find({ date: { $gte: yesterday, $lt: today } }),
     Product.find(),
     Return.find({ date: { $gte: today } }),
-    weekBars()
+    weekBars(),
+    Topup.find({ date: { $gte: today } }).sort({ date: -1 }),
+    Topup.find({ date: { $gte: yesterday, $lt: today } }),
+    getTopupAccount(),
+    Expense.find({ date: { $gte: today } }).sort({ date: -1 })
   ]);
 
   const cur = saleTotals(todaySales);
   const prev = saleTotals(yesterdaySales);
   const ret = returnTotals(todayReturns);
+  const topup = topupTotals(todayTopups);
+  const topupPrev = topupTotals(yesterdayTopups);
+  const spent = expenseTotals(todayExpenses);
 
   // One pass over the catalogue gives both the alert list and the sidebar badge.
   const flagged = products
@@ -35,13 +43,28 @@ export const GET = route(async () => {
 
   const { top } = await movers(todaySales);
 
+  // The day's profit is everything the shop kept: margin on goods, less what returns
+  // gave back and what it spent, plus the commission on airtime.
+  const profit = cur.profit - ret.profitLoss + topup.commission - spent.amount;
+  const prevProfit = prev.profit + topupPrev.commission;
+
   return ok({
     sales: cur.rev,
     salesDelta: prev.rev ? Math.round((cur.rev - prev.rev) / prev.rev * 100) : null,
     bills: cur.bills,
     billsDelta: cur.bills - prev.bills,
-    profit: cur.profit - ret.profitLoss,
-    profitDelta: prev.profit ? Math.round((cur.profit - ret.profitLoss - prev.profit) / prev.profit * 100) : null,
+    profit,
+    profitDelta: prevProfit ? Math.round((profit - prevProfit) / prevProfit * 100) : null,
+    topupAmount: topup.amount, topupCount: topup.count, topupProfit: topup.commission,
+    topupProfitDelta: topupPrev.commission
+      ? Math.round((topup.commission - topupPrev.commission) / topupPrev.commission * 100)
+      : null,
+    creditLeft: account.balance, creditProvider: account.provider,
+    creditOwed: account.owed,
+    expenses: spent.amount, expenseCount: spent.count,
+    recentExpenses: todayExpenses.slice(0, 4).map((e) => ({
+      id: e._id, category: e.category, desc: e.desc, amount: e.amount, paidBy: e.paidBy
+    })),
     alertCount: flagged.length,
     outCount: flagged.filter(({ s }) => s.key === 'out').length,
     lowCount: flagged.filter(({ s }) => s.key === 'low').length,

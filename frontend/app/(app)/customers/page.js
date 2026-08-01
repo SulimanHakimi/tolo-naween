@@ -92,8 +92,8 @@ export default function CustomersPage() {
     setError('');
     setHistory({ customer: c, sales: null });
     try {
-      const sales = await api(`/sales?customer=${encodeURIComponent(c.name)}&limit=50`);
-      setHistory({ customer: c, sales });
+      const r = await api(`/sales?customer=${encodeURIComponent(c.name)}&limit=50`);
+      setHistory({ customer: c, sales: r.sales });
     } catch (e) {
       setHistory({ customer: c, sales: [] });
       setError(e.message);

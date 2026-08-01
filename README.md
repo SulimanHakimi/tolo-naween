@@ -2,7 +2,8 @@
 
 Supermarket management system: point of sale with printed bills and barcode scanning,
 stock with buy / retail / wholesale prices, suppliers and purchase orders, customer
-credit (قرض), returns, seasonal discounts, reports, and backups.
+credit (قرض), returns, seasonal discounts, mobile topup with its commission, shop
+expenses, reports, and backups.
 
 The whole interface is Dari, right-to-left, on the Hijri Shamsi calendar.
 
@@ -16,11 +17,14 @@ Same stack as Hakimi Pharmacy, built as its own project — nothing in that fold
 
 | Screen | What it does |
 |---|---|
-| داشبورد | Today's sales, bills, profit, stock alerts, week chart, top sellers |
+| داشبورد | Today's sales, bills, profit, topup, expenses, stock alerts, week chart |
 | صندوق فروش | Barcode scan, product grid, cart, four payment types, printed bill |
+| بل‌ها و فروشات | Every bill ever written — search, filter by date and payment, reprint, return |
+| تاپ‌آپ و کریدت | Airtime credit taken from the company, topups sent to any number, commission |
 | موجودی و گدام | Products with unit, barcode, prices, stock, expiry; add / edit / delete |
 | خرید و تهیه‌کنندگان | Suppliers, payables, multi-line purchase orders, receiving |
 | مشتریان و قرض‌ها | Customers, credit balances, settlements, purchase history |
+| مصارف دکان | Rent, power, wages, transport, anything bought for the shop; who fronted it |
 | راپورها | Daily / weekly / monthly figures, P&L, movers, cash book, returns, printing |
 | قیمت‌ها و تخفیفات | Retail/wholesale pricing, margins, discount rules |
 | امنیت و بک‌اپ | Backups, login accounts, settings, activity log |
@@ -88,7 +92,12 @@ real data you enter. The natural order on day one:
    opening stock, and optionally wholesale price, barcode and expiry date.
 3. **صندوق فروش** → start selling. Named customers are created on their first purchase.
 
-Bill and purchase-order numbers start at 1001.
+If the shop also does mobile topup, set the credit provider and the commission rate
+under **تاپ‌آپ و کریدت → تنظیمات اعتبار** and take your first credit in; until then the
+screen simply says the balance is empty.
+
+Numbering starts at 1001 throughout: bills `1001`, purchase orders `PO-1001`, topups
+`TP-1001`, credit taken in `CR-1001`, expenses `EX-1001`.
 
 ## How the pieces connect
 
@@ -112,10 +121,36 @@ never be refunded twice. Restocked goods give back only the margin; goods too da
 resell also lose their purchase cost. A return on a credit sale reduces the customer's
 debt instead of paying out cash.
 
+**Topup** runs on one pool of credit. The shop takes credit from a single company and
+sends it to any number on any network out of that pool — there is nothing to pick at
+the till but the number and the amount.
+
+Taking 10,000 of credit for 9,800 raises the balance by 10,000 and books 9,800 going
+out (or adds it to what the company is owed, if it is paid for later). Selling 1,000 of
+that takes 1,000 in and drops the balance by 1,000, so the till ends up 20 ahead per
+1,000 — the commission rate, editable under **تاپ‌آپ و کریدت → تنظیمات اعتبار**.
+
+The rate is frozen onto each topup as it is sold, so changing it never moves what past
+sales earned. **Only the commission is profit.** The face value belongs to the telecom
+company and passes straight through, which is why the P&L counts the commission and
+shows the money moved separately — and why cash entries tagged `topup` stay out of the
+expense line. A topup sold on قرض adds to that customer's balance exactly as a bill
+does, and becomes income when they pay.
+
+**Shop expenses** are everything that is not stock: rent, power, wages, transport, and
+whatever somebody buys for the shop. Each one books a cash-book entry the day it
+happens and comes off net profit; deleting the expense removes that entry too.
+
+When a staff member pays out of their own pocket, put their name in *پرداخت‌کننده* and
+the expense stays flagged **بازپرداخت نشده** until they are paid back. Paying them back
+is a movement between the till and that person, not a second expense, so it writes no
+new entry. Goods bought from suppliers do not belong here — they are already inside cost
+of goods sold.
+
 **Reports** are computed from the bills themselves. Stock purchases sit inside cost of
 goods sold, so the P&L excludes any cash entry tagged `stock` rather than counting it
-twice. Slow movers include products that sold nothing at all — those are the ones tying
-up cash.
+twice; `topup` is excluded for the same reason. Slow movers include products that sold
+nothing at all — those are the ones tying up cash.
 
 ## Calendar
 
@@ -192,9 +227,15 @@ check — there are no per-route permissions.
 | GET, POST | `/customers` | POST accepts an opening قرض balance |
 | PUT, DELETE | `/customers/:id` | rename cascades to bills |
 | POST | `/customers/:id/settle` | full or partial repayment |
-| GET, POST | `/sales` | POST re-prices every line server-side |
+| GET, POST | `/sales` | GET takes `q`, `payment`, `from`, `to`, `customer`, `page`; POST re-prices every line server-side |
 | POST | `/sales/:id/return` | checked against what is left on each line |
 | GET | `/returns` | |
+| GET, PUT | `/topup/account` | the one credit account: provider, rate, balance, owed |
+| POST | `/topup/account/pay` | pays down what is owed for credit taken on account |
+| GET, POST | `/topup/loads` | credit coming in; empty cost falls back to the usual terms |
+| GET, POST | `/topup` | POST sends a topup and freezes the commission onto it |
+| GET, POST | `/expenses` | POST writes the cash-book entry alongside |
+| PUT, DELETE | `/expenses/:id` | PUT with only `reimbursed` marks a pay-back |
 | GET, POST | `/discounts` | |
 | PUT, DELETE | `/discounts/:id` | PUT with only `active` toggles it |
 | GET, POST | `/transactions` | cash book, receivables and payables |

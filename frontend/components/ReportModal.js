@@ -94,12 +94,30 @@ export default function ReportModal({ type, period, onClose }) {
                   <div style={{ borderTop: '1px dashed #C6D0D8', margin: '8px 0' }}></div>
                   {row('تخفیفات داده‌شده', '− ' + fmt(data.discounts))}
                   {row('ضرر برگشتی‌ها', '− ' + fmt(data.returnLoss))}
-                  {row('مصارف', '− ' + fmt(data.otherExpenses))}
+                  {row('مصارف دکان', '− ' + fmt(data.otherExpenses))}
+                  {row(`کمیشن تاپ‌آپ (${num(data.topupCount)} فروش)`, '+ ' + fmt(data.topupProfit))}
                   <div className="doc-total" style={{ color: data.netProfit >= 0 ? 'var(--green)' : 'var(--red)' }}>
                     <div>مفاد خالص</div><div className="tnum">{fmt(data.netProfit)}</div>
                   </div>
+
+                  {data.expenseCats.length > 0 && (
+                    <>
+                      <div style={{ fontSize: 12.5, fontWeight: 700, marginTop: 14, marginBottom: 4 }}>
+                        مصارف بر اساس دسته
+                      </div>
+                      {data.expenseCats.map((c) => (
+                        <div key={c.name} className="doc-line">
+                          <div>{c.name}</div>
+                          <div className="tnum" style={LEFT}>{fmt(c.amount)} ({c.pct}٪)</div>
+                        </div>
+                      ))}
+                    </>
+                  )}
+
                   <div style={{ fontSize: 10.5, color: 'var(--faint)', marginTop: 10, lineHeight: 1.8 }}>
                     خریدهای گدام در «قیمت تمام‌شد» حساب شده‌اند و دوباره در مصارف شامل نیستند.
+                    از تاپ‌آپ تنها کمیشن آن مفاد شمرده می‌شود — {fmt(data.topupAmount)} پول تاپ‌آپ
+                    مربوط شرکت مخابراتی است.
                   </div>
                 </div>
               )}
